@@ -11,6 +11,8 @@ jobs:
   deploy:
     name: Deploy momento2 to Fly.io
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v3
 
