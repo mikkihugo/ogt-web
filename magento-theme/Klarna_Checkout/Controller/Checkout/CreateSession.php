@@ -7,23 +7,27 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
+use Psr\Log\LoggerInterface;
 
 class CreateSession extends Action
 {
     private $resultJsonFactory;
     private $checkoutSession;
     private $scopeConfig;
+    private $logger;
 
     public function __construct(
         Context $context,
         JsonFactory $resultJsonFactory,
         CheckoutSession $checkoutSession,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        LoggerInterface $logger
     ) {
         parent::__construct($context);
         $this->resultJsonFactory = $resultJsonFactory;
         $this->checkoutSession = $checkoutSession;
         $this->scopeConfig = $scopeConfig;
+        $this->logger = $logger;
     }
 
     public function execute()
@@ -99,15 +103,20 @@ class CreateSession extends Action
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($orderData));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
             curl_close($ch);
 
             if ($httpCode !== 201) {
+                // Log error for debugging
+                $this->logger->error('Klarna API Error: HTTP ' . $httpCode . ' - ' . $response);
                 return $result->setData([
                     'success' => false,
-                    'error' => 'Failed to create Klarna session'
+                    'error' => 'Unable to initialize payment session. Please try again.'
                 ]);
             }
 

@@ -68,21 +68,24 @@ class ShoppingCart {
       if (this.items.length === 0) {
         cartItems.innerHTML = '<p class="muted">Your cart is empty</p>';
       } else {
-        cartItems.innerHTML = this.items.map(item => `
+        cartItems.innerHTML = this.items.map(item => {
+          const sanitizedName = document.createElement('div');
+          sanitizedName.textContent = item.name;
+          return `
           <div class="cart-item">
             <div class="cart-item-image" style="background-image:url('https://via.placeholder.com/80x80?text=${encodeURIComponent(item.name)}')"></div>
             <div class="cart-item-details">
-              <div class="cart-item-name">${item.name}</div>
-              <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+              <div class="cart-item-name">${sanitizedName.innerHTML}</div>
+              <div class="cart-item-price">$${parseFloat(item.price).toFixed(2)}</div>
               <div class="cart-item-quantity">
-                <button class="qty-btn" onclick="cart.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
-                <span>${item.quantity}</span>
-                <button class="qty-btn" onclick="cart.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                <button class="qty-btn" onclick="cart.updateQuantity(${parseInt(item.id)}, ${parseInt(item.quantity) - 1})">-</button>
+                <span>${parseInt(item.quantity)}</span>
+                <button class="qty-btn" onclick="cart.updateQuantity(${parseInt(item.id)}, ${parseInt(item.quantity) + 1})">+</button>
               </div>
             </div>
-            <button class="cart-item-remove" onclick="cart.removeItem(${item.id})">×</button>
+            <button class="cart-item-remove" onclick="cart.removeItem(${parseInt(item.id)})">×</button>
           </div>
-        `).join('');
+        `}).join('');
       }
     }
     

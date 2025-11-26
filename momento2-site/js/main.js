@@ -20,22 +20,36 @@ function openProduct(event, productId) {
     
     title.textContent = product.name;
     
-    // Update modal content with product details
+    // Update modal content with product details (sanitize text)
     const modalPanel = modal.querySelector('.modal-panel');
     const mutedP = modalPanel.querySelector('.muted');
+    const descEl = document.createElement('div');
+    descEl.textContent = product.description;
     mutedP.innerHTML = `
       <p style="text-align: left; margin-top: 16px;">
-        <strong>Price: $${product.price.toFixed(2)}</strong><br><br>
-        ${product.description}
+        <strong>Price: $${parseFloat(product.price).toFixed(2)}</strong><br><br>
+        ${descEl.innerHTML}
       </p>
     `;
     
     // Update modal actions to include add to cart
     const modalActions = modalPanel.querySelector('.modal-actions');
+    const nameEl = document.createElement('div');
+    nameEl.textContent = product.name;
     modalActions.innerHTML = `
-      <button class="btn btn-primary" onclick="addToCart(${productId}, '${product.name}', ${product.price}); closeModal();">Add to Cart</button>
+      <button class="btn btn-primary" data-product-id="${parseInt(productId)}" data-product-name="${nameEl.textContent}" data-product-price="${parseFloat(product.price)}">Add to Cart</button>
       <button class="btn outline" onclick="closeModal()">Close</button>
     `;
+    
+    // Add event listener for add to cart button
+    modalActions.querySelector('[data-product-id]').addEventListener('click', function() {
+      addToCart(
+        parseInt(this.dataset.productId),
+        this.dataset.productName,
+        parseFloat(this.dataset.productPrice)
+      );
+      closeModal();
+    });
     
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('no-scroll');

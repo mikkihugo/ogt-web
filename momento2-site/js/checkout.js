@@ -1,7 +1,8 @@
 // Checkout page functionality with Stripe and Klarna integration
 
-// Initialize Stripe (use your publishable key)
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51234567890'; // Replace with your actual Stripe publishable key
+// Initialize Stripe - Load from config or environment
+// In production, this should be loaded from your backend configuration
+const STRIPE_PUBLISHABLE_KEY = window.STRIPE_KEY || 'pk_test_REPLACE_WITH_YOUR_KEY';
 let stripe;
 let cardElement;
 
@@ -25,16 +26,19 @@ function loadCheckoutItems() {
     return;
   }
   
-  // Display cart items
-  checkoutItems.innerHTML = cart.items.map(item => `
+  // Display cart items (sanitize data to prevent XSS)
+  checkoutItems.innerHTML = cart.items.map(item => {
+    const sanitizedName = document.createElement('div');
+    sanitizedName.textContent = item.name;
+    return `
     <div class="checkout-item">
       <div class="checkout-item-info">
-        <div class="checkout-item-name">${item.name}</div>
-        <div class="checkout-item-qty">Quantity: ${item.quantity}</div>
+        <div class="checkout-item-name">${sanitizedName.innerHTML}</div>
+        <div class="checkout-item-qty">Quantity: ${parseInt(item.quantity)}</div>
       </div>
-      <div class="checkout-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+      <div class="checkout-item-price">$${parseFloat(item.price * item.quantity).toFixed(2)}</div>
     </div>
-  `).join('');
+  `}).join('');
   
   // Calculate totals
   const subtotal = cart.getTotal();

@@ -92,7 +92,8 @@ class Payment extends AbstractMethod
                 $payment->setIsTransactionClosed(false);
             }
         } catch (\Exception $e) {
-            throw new LocalizedException(__('Payment authorization failed: %1', $e->getMessage()));
+            $this->_logger->error('Stripe authorization error: ' . $e->getMessage());
+            throw new LocalizedException(__('Payment authorization failed. Please try again or contact support.'));
         }
 
         return $this;
@@ -128,7 +129,8 @@ class Payment extends AbstractMethod
                 $payment->setIsTransactionClosed(true);
             }
         } catch (\Exception $e) {
-            throw new LocalizedException(__('Payment capture failed: %1', $e->getMessage()));
+            $this->_logger->error('Stripe capture error: ' . $e->getMessage());
+            throw new LocalizedException(__('Payment capture failed. Please contact support.'));
         }
 
         return $this;
@@ -154,7 +156,8 @@ class Payment extends AbstractMethod
                 $intent->cancel();
             }
         } catch (\Exception $e) {
-            throw new LocalizedException(__('Payment void failed: %1', $e->getMessage()));
+            $this->_logger->error('Stripe void error: ' . $e->getMessage());
+            throw new LocalizedException(__('Payment void failed. Please contact support.'));
         }
 
         return $this;
