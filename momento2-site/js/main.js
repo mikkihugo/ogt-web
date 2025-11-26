@@ -23,14 +23,23 @@ function openProduct(event, productId) {
     // Update modal content with product details (sanitize text)
     const modalPanel = modal.querySelector('.modal-panel');
     const mutedP = modalPanel.querySelector('.muted');
-    const descEl = document.createElement('div');
-    descEl.textContent = product.description;
-    mutedP.innerHTML = `
-      <p style="text-align: left; margin-top: 16px;">
-        <strong>Price: $${parseFloat(product.price).toFixed(2)}</strong><br><br>
-        ${descEl.innerHTML}
-      </p>
-    `;
+    
+    // Create elements safely without innerHTML
+    const priceEl = document.createElement('p');
+    priceEl.style.cssText = 'text-align: left; margin-top: 16px;';
+    
+    const priceStrong = document.createElement('strong');
+    priceStrong.textContent = 'Price: $' + parseFloat(product.price).toFixed(2);
+    
+    const desc = document.createTextNode(product.description);
+    
+    priceEl.appendChild(priceStrong);
+    priceEl.appendChild(document.createElement('br'));
+    priceEl.appendChild(document.createElement('br'));
+    priceEl.appendChild(desc);
+    
+    mutedP.innerHTML = '';
+    mutedP.appendChild(priceEl);
     
     // Update modal actions to include add to cart
     const modalActions = modalPanel.querySelector('.modal-actions');

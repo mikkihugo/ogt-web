@@ -68,24 +68,62 @@ class ShoppingCart {
       if (this.items.length === 0) {
         cartItems.innerHTML = '<p class="muted">Your cart is empty</p>';
       } else {
-        cartItems.innerHTML = this.items.map(item => {
-          const sanitizedName = document.createElement('div');
-          sanitizedName.textContent = item.name;
-          return `
-          <div class="cart-item">
-            <div class="cart-item-image" style="background-image:url('https://via.placeholder.com/80x80?text=${encodeURIComponent(item.name)}')"></div>
-            <div class="cart-item-details">
-              <div class="cart-item-name">${sanitizedName.innerHTML}</div>
-              <div class="cart-item-price">$${parseFloat(item.price).toFixed(2)}</div>
-              <div class="cart-item-quantity">
-                <button class="qty-btn" onclick="cart.updateQuantity(${parseInt(item.id)}, ${parseInt(item.quantity) - 1})">-</button>
-                <span>${parseInt(item.quantity)}</span>
-                <button class="qty-btn" onclick="cart.updateQuantity(${parseInt(item.id)}, ${parseInt(item.quantity) + 1})">+</button>
-              </div>
-            </div>
-            <button class="cart-item-remove" onclick="cart.removeItem(${parseInt(item.id)})">×</button>
-          </div>
-        `}).join('');
+        // Build cart items safely without innerHTML injection
+        cartItems.innerHTML = '';
+        this.items.forEach(item => {
+          const cartItem = document.createElement('div');
+          cartItem.className = 'cart-item';
+          
+          const itemImage = document.createElement('div');
+          itemImage.className = 'cart-item-image';
+          itemImage.style.backgroundImage = `url('https://via.placeholder.com/80x80?text=${encodeURIComponent(item.name)}')`;
+          
+          const itemDetails = document.createElement('div');
+          itemDetails.className = 'cart-item-details';
+          
+          const itemName = document.createElement('div');
+          itemName.className = 'cart-item-name';
+          itemName.textContent = item.name;
+          
+          const itemPrice = document.createElement('div');
+          itemPrice.className = 'cart-item-price';
+          itemPrice.textContent = '$' + parseFloat(item.price).toFixed(2);
+          
+          const itemQuantity = document.createElement('div');
+          itemQuantity.className = 'cart-item-quantity';
+          
+          const minusBtn = document.createElement('button');
+          minusBtn.className = 'qty-btn';
+          minusBtn.textContent = '-';
+          minusBtn.onclick = () => this.updateQuantity(item.id, item.quantity - 1);
+          
+          const qtySpan = document.createElement('span');
+          qtySpan.textContent = item.quantity;
+          
+          const plusBtn = document.createElement('button');
+          plusBtn.className = 'qty-btn';
+          plusBtn.textContent = '+';
+          plusBtn.onclick = () => this.updateQuantity(item.id, item.quantity + 1);
+          
+          itemQuantity.appendChild(minusBtn);
+          itemQuantity.appendChild(qtySpan);
+          itemQuantity.appendChild(plusBtn);
+          
+          itemDetails.appendChild(itemName);
+          itemDetails.appendChild(itemPrice);
+          itemDetails.appendChild(itemQuantity);
+          
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'cart-item-remove';
+          removeBtn.textContent = '×';
+          removeBtn.onclick = () => this.removeItem(item.id);
+          
+          cartItem.appendChild(itemImage);
+          cartItem.appendChild(itemDetails);
+          cartItem.appendChild(removeBtn);
+          
+          cartItems.appendChild(cartItem);
+        });
       }
     }
     

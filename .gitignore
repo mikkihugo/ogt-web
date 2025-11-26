@@ -42,3 +42,6 @@ temp/
 # Fly.io
 .fly/
 fly.toml.bak
+
+# Configuration with secrets
+momento2-site/config.js

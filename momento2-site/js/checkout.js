@@ -1,10 +1,16 @@
 // Checkout page functionality with Stripe and Klarna integration
 
 // Initialize Stripe - Load from config or environment
-// In production, this should be loaded from your backend configuration
-const STRIPE_PUBLISHABLE_KEY = window.STRIPE_KEY || 'pk_test_REPLACE_WITH_YOUR_KEY';
+// IMPORTANT: Set window.STRIPE_KEY in your HTML template with the publishable key
+// from your Magento configuration or environment variables
+const STRIPE_PUBLISHABLE_KEY = window.STRIPE_KEY;
 let stripe;
 let cardElement;
+
+// Validate Stripe key is configured
+if (!STRIPE_PUBLISHABLE_KEY || STRIPE_PUBLISHABLE_KEY.indexOf('pk_') !== 0) {
+  console.error('Stripe publishable key not configured. Set window.STRIPE_KEY in your HTML.');
+}
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,19 +32,35 @@ function loadCheckoutItems() {
     return;
   }
   
-  // Display cart items (sanitize data to prevent XSS)
-  checkoutItems.innerHTML = cart.items.map(item => {
-    const sanitizedName = document.createElement('div');
-    sanitizedName.textContent = item.name;
-    return `
-    <div class="checkout-item">
-      <div class="checkout-item-info">
-        <div class="checkout-item-name">${sanitizedName.innerHTML}</div>
-        <div class="checkout-item-qty">Quantity: ${parseInt(item.quantity)}</div>
-      </div>
-      <div class="checkout-item-price">$${parseFloat(item.price * item.quantity).toFixed(2)}</div>
-    </div>
-  `}).join('');
+  // Display cart items safely without innerHTML injection
+  checkoutItems.innerHTML = '';
+  cart.items.forEach(item => {
+    const checkoutItem = document.createElement('div');
+    checkoutItem.className = 'checkout-item';
+    
+    const itemInfo = document.createElement('div');
+    itemInfo.className = 'checkout-item-info';
+    
+    const itemName = document.createElement('div');
+    itemName.className = 'checkout-item-name';
+    itemName.textContent = item.name;
+    
+    const itemQty = document.createElement('div');
+    itemQty.className = 'checkout-item-qty';
+    itemQty.textContent = 'Quantity: ' + parseInt(item.quantity);
+    
+    itemInfo.appendChild(itemName);
+    itemInfo.appendChild(itemQty);
+    
+    const itemPrice = document.createElement('div');
+    itemPrice.className = 'checkout-item-price';
+    itemPrice.textContent = '$' + parseFloat(item.price * item.quantity).toFixed(2);
+    
+    checkoutItem.appendChild(itemInfo);
+    checkoutItem.appendChild(itemPrice);
+    
+    checkoutItems.appendChild(checkoutItem);
+  });
   
   // Calculate totals
   const subtotal = cart.getTotal();
