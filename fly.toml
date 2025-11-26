@@ -24,10 +24,10 @@ primary_region = "iad"
     path = "/"
 
 [mounts]
-  source = "momento2_data"
-  destination = "/var/www/html/var"
+  source = "magento_data"
+  destination = "/var/lib/mysql"
 
 [[vm]]
   cpu_kind = "shared"
-  cpus = 1
-  memory_mb = 512
+  cpus = 2
+  memory_mb = 2048
