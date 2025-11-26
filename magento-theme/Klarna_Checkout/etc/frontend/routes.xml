@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+  <route id="klarna_checkout" frontName="klarna">
+    <module name="Klarna_Checkout" />
+  </route>
+</routes>

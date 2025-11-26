@@ -1,0 +1,9 @@
+{
+  "name": "msgnet/theme-msgnet2",
+  "description": "Msgnet2 Magento 2 theme skeleton",
+  "type": "magento2-theme",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.4"
+  }
+}

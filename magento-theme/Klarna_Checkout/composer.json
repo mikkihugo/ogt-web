@@ -1,0 +1,9 @@
+{
+  "name": "msgnet/klarna-checkout",
+  "description": "Starter Klarna checkout integration for Magento 2",
+  "type": "magento2-module",
+  "version": "0.0.1",
+  "require": {
+    "php": ">=7.4"
+  }
+}
