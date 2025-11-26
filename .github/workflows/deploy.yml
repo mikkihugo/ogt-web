@@ -18,7 +18,15 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
+      - name: Set Fly Secrets
+        run: |
+          flyctl secrets set \
+            COMPOSER_MAGENTO_USERNAME=${{ secrets.COMPOSER_MAGENTO_USERNAME }} \
+            COMPOSER_MAGENTO_PASSWORD=${{ secrets.COMPOSER_MAGENTO_PASSWORD }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
       - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --build-arg COMPOSER_MAGENTO_USERNAME=${{ secrets.COMPOSER_MAGENTO_USERNAME }} --build-arg COMPOSER_MAGENTO_PASSWORD=${{ secrets.COMPOSER_MAGENTO_PASSWORD }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

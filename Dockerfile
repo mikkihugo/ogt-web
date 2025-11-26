@@ -54,16 +54,47 @@ RUN adduser -D -u 1000 -g 'www' www \
 
 FROM base AS build
 
-# Copy momento2 site (static site version for Fly.io)
-COPY momento2-site /var/www/html/
+ARG COMPOSER_MAGENTO_USERNAME
+ARG COMPOSER_MAGENTO_PASSWORD
+
+# Configure composer auth
+RUN composer config --global http-basic.repo.magento.com \
+    "${COMPOSER_MAGENTO_USERNAME}" "${COMPOSER_MAGENTO_PASSWORD}"
+
+# Install Magento Open Source
+RUN composer create-project --repository-url=https://repo.magento.com/ \
+    magento/project-community-edition /var/www/html/magento2
+
+WORKDIR /var/www/html/magento2
+
+# Copy custom theme and modules
+COPY magento-theme /tmp/magento-theme
+
+# Install Theme
+RUN mkdir -p app/design/frontend/Msgnet/msgnet2 \
+    && cp -r /tmp/magento-theme/* app/design/frontend/Msgnet/msgnet2/ \
+    && rm -rf app/design/frontend/Msgnet/msgnet2/Klarna_Checkout \
+    && rm -rf app/design/frontend/Msgnet/msgnet2/Stripe_Checkout
+
+# Install Modules
+RUN mkdir -p app/code/Klarna/Checkout \
+    && cp -r /tmp/magento-theme/Klarna_Checkout/* app/code/Klarna/Checkout/
+
+RUN mkdir -p app/code/Stripe/Checkout \
+    && cp -r /tmp/magento-theme/Stripe_Checkout/* app/code/Stripe/Checkout/
+
+# Copy static frontend site (optional, maybe as a subfolder or replacement?)
+# User asked for "opensource" (Magento), so we prioritize Magento.
+# We can put momento2-site in pub/momento2 for reference/access
+COPY momento2-site /var/www/html/magento2/pub/momento2
 
 # Set proper permissions
-RUN chown -R www:www /var/www/html
+RUN chown -R www:www /var/www/html/magento2
 
 FROM base AS final
 
 # Copy built site from build stage
-COPY --from=build --chown=www:www /var/www/html /var/www/html
+COPY --from=build --chown=www:www /var/www/html/magento2 /var/www/html
 
 # Expose port 8080 (Fly.io standard)
 EXPOSE 8080
