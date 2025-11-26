@@ -1,6 +1,6 @@
-# Deployment Guide for Momento2 (orgasmtoy.com)
+# Deployment Guide for orgasmtoy.com
 
-This guide covers deploying the momento2 e-commerce site to Fly.io with Adobe Magento integration.
+This guide covers deploying the orgasmtoy e-commerce site to Fly.io with Adobe Magento integration.
 
 ## Overview
 

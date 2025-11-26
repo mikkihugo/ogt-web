@@ -1,6 +1,8 @@
-# Momento2 Site - Production Frontend
+# orgasmtoy Site - Production Frontend
 
 Production-ready e-commerce frontend for orgasmtoy.com with shopping cart and checkout.
+
+**Note**: This folder is named `momento2-site` (internal project name) but the site branding is "orgasmtoy".
 
 ## Features
 

@@ -1,8 +1,10 @@
-# Momento2 E-commerce Project Summary
+# orgasmtoy E-commerce Project Summary
 
 ## Project Overview
 
 Complete e-commerce solution for **orgasmtoy.com** built with Adobe Magento (open source), featuring dual payment integration with Stripe and Klarna, ready for deployment on Fly.io.
+
+**Note**: The site folder is named `momento2-site` (internal project name) but all branding displays as "orgasmtoy".
 
 ## What Was Built
 

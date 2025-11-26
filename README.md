@@ -1,4 +1,4 @@
-# Momento2 - E-commerce for orgasmtoy.com
+# orgasmtoy E-commerce Platform
 
 A complete e-commerce solution built with Adobe Magento (open source), featuring Stripe and Klarna payment integration, optimized for deployment on Fly.io.
 
@@ -6,7 +6,7 @@ A complete e-commerce solution built with Adobe Magento (open source), featuring
 
 This repository contains everything needed to launch **orgasmtoy.com**:
 
-- **momento2-site/** — Production-ready static site with shopping cart, Stripe & Klarna checkout
+- **momento2-site/** — Production-ready static site for orgasmtoy.com with shopping cart, Stripe & Klarna checkout
 - **magento-theme/** — Complete Magento 2 modules for full e-commerce functionality
   - `Stripe_Checkout/` — Full Stripe payment gateway integration
   - `Klarna_Checkout/` — Complete Klarna payment integration
@@ -15,9 +15,9 @@ This repository contains everything needed to launch **orgasmtoy.com**:
 
 ## 🎯 Quick Start
 
-### Try momento2 site locally
+### Try the orgasmtoy site locally
 
-The momento2 site is production-ready with shopping cart and checkout:
+The site is production-ready with shopping cart and checkout:
 
 ```bash
 cd momento2-site
