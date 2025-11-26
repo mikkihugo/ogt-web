@@ -1,0 +1,44 @@
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# Magento specific
+var/
+pub/media/catalog/
+pub/static/
+generated/
+vendor/
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.zip
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Fly.io
+.fly/
+fly.toml.bak
