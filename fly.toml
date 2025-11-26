@@ -1,5 +1,5 @@
-app = "momento2-orgasmtoy"
-primary_region = "iad"
+app = "magneto-orgasmtoy"
+primary_region = "arn"
 
 [build]
   dockerfile = "Dockerfile"
