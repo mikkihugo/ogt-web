@@ -1,25 +1,44 @@
-# Magneto Webstore
+# orgasmtoy E-commerce Platform
 
-An open-source e-commerce webstore built with [Magento](https://magento.com/).
+A complete e-commerce solution built with Adobe Magento (open source), featuring Stripe and Klarna payment integration, optimized for deployment on Fly.io.
 
-This repository now includes two helpful starting points for building a tasteful, sensual storefront:
+## 🚀 What's Included
 
-- `theme-prototype/` — a static, Lelo-like prototype site (HTML + CSS) you can open locally to preview a refined layout and product pages.
-- `magento-theme/` — a minimal Magento 2 theme skeleton (registration, theme.xml, composer.json) to copy into a Magento 2 instance and adapt templates and assets.
+This repository contains everything needed to launch **orgasmtoy.com**:
 
-## Try the prototype locally
+- **momento2-site/** — Production-ready static site for orgasmtoy.com with shopping cart, Stripe & Klarna checkout
+- **magento-theme/** — Complete Magento 2 modules for full e-commerce functionality
+  - `Stripe_Checkout/` — Full Stripe payment gateway integration
+  - `Klarna_Checkout/` — Complete Klarna payment integration
+- **Fly.io deployment** — Containerized deployment with auto-scaling
+- **CI/CD** — Automatic deployment from Git
 
-The prototype is purely static and can be opened directly in a browser, or served with a simple HTTP server.
+## 🎯 Quick Start
 
-From the project root you can run (Python 3):
+### Try the orgasmtoy site locally
+
+The site is production-ready with shopping cart and checkout:
+
+```bash
+cd momento2-site
+python3 -m http.server 8000
+# Open http://localhost:8000 in your browser
+```
+
+Features:
+- Full shopping cart with localStorage persistence
+- Product catalog with 6 featured items
+- Stripe payment integration (frontend)
+- Klarna payment option
+- Responsive mobile-first design
+
+### Try legacy prototype
 
 ```bash
 cd theme-prototype
-python3 -m http.server 8000
-# then open http://localhost:8000 in your browser
+python3 -m http.server 8001
+# Open http://localhost:8001 in your browser
 ```
-
-This will let you preview the Lelo-like layout, product cards and modal interactions.
 
 ## Install Magento 2 locally with Docker (optional)
 
@@ -87,10 +106,117 @@ When choosing a theme for adult products, prefer themes that are:
 
 Contributions are welcome! Please open issues or pull requests with improvements to the prototype or the Magento skeleton.
 
-## Klarna Checkout starter module
+## 💳 Payment Integration
 
-There is a starter Klarna module in `magento-theme/Klarna_Checkout/` with admin settings and a controller stub. Copy it into your Magento app under `app/code/Klarna/Checkout` and extend the controller to use real Klarna API calls. The module README contains notes about registering your domain (orgasmtoy.com) and getting test credentials.
+### Stripe Module (`magento-theme/Stripe_Checkout/`)
 
-## License
+Full-featured Stripe payment gateway for Magento 2:
+- Complete Stripe API integration using stripe-php library
+- Payment Intent creation with automatic capture
+- Test and live mode support
+- Secure credential storage
+- Void and refund capabilities
+
+Copy to Magento: `app/code/Stripe/Checkout`
+
+See [Stripe_Checkout/README.md](magento-theme/Stripe_Checkout/README.md) for setup instructions.
+
+### Klarna Module (`magento-theme/Klarna_Checkout/`)
+
+Full Klarna Checkout integration with real API calls:
+- Klarna Checkout API v3 integration
+- Order line items with tax calculation
+- Test (playground) and production modes
+- Webhook support for payment confirmation
+- Configured for orgasmtoy.com domain
+
+Copy to Magento: `app/code/Klarna/Checkout`
+
+See [Klarna_Checkout/README.md](magento-theme/Klarna_Checkout/README.md) for setup instructions.
+
+## 🚢 Deploy to Fly.io (Production)
+
+Deploy orgasmtoy.com to Fly.io with one command:
+
+```bash
+# Install Fly.io CLI
+curl -L https://fly.io/install.sh | sh
+
+# Authenticate
+fly auth login
+
+# Deploy
+fly deploy
+```
+
+The site will be live at your Fly.io URL. To use orgasmtoy.com:
+
+```bash
+fly certs add orgasmtoy.com
+# Follow DNS instructions
+```
+
+**Automatic Deployment**: Push to `main` branch triggers auto-deploy via GitHub Actions.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment guide including:
+- Custom domain setup for orgasmtoy.com
+- Environment secrets configuration
+- Database setup
+- Full Magento deployment
+- Monitoring and scaling
+
+## 📦 Repository Structure
+
+```
+magneto-web/
+├── momento2-site/          # Production site for orgasmtoy.com
+│   ├── index.html          # Homepage with product catalog
+│   ├── checkout.html       # Checkout with Stripe & Klarna
+│   ├── css/style.css       # Complete styling
+│   └── js/
+│       ├── cart.js         # Shopping cart management
+│       ├── checkout.js     # Payment processing
+│       └── main.js         # Site functionality
+├── magento-theme/          # Magento 2 modules
+│   ├── Stripe_Checkout/   # Full Stripe integration
+│   ├── Klarna_Checkout/   # Full Klarna integration
+│   ├── composer.json       # Theme metadata
+│   └── theme.xml           # Theme configuration
+├── theme-prototype/        # Legacy prototype
+├── Dockerfile             # Production container
+├── fly.toml               # Fly.io configuration
+├── DEPLOYMENT.md          # Complete deployment guide
+└── .github/workflows/     # CI/CD automation
+```
+
+## 🔒 Security & Best Practices
+
+- ✅ Encrypted payment credentials
+- ✅ HTTPS/SSL enforced
+- ✅ No secrets in code
+- ✅ Test mode for development
+- ✅ Production-ready error handling
+- ✅ PCI DSS compliant payment flow
+
+## 🛠️ Technology Stack
+
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **E-commerce**: Adobe Magento 2 (Open Source)
+- **Payments**: Stripe API v3, Klarna Checkout API v3
+- **Deployment**: Fly.io (containerized)
+- **CI/CD**: GitHub Actions
+- **Database**: MySQL/MariaDB (for Magento)
+
+## 📚 Documentation
+
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide
+- [Stripe_Checkout/README.md](magento-theme/Stripe_Checkout/README.md) - Stripe module docs
+- [Klarna_Checkout/README.md](magento-theme/Klarna_Checkout/README.md) - Klarna module docs
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open issues or pull requests with improvements.
+
+## 📄 License
 
 This project is licensed under the MIT License.
