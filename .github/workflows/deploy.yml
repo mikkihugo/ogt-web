@@ -31,4 +31,6 @@ jobs:
         run: |
           # Sanitize token: remove leading/trailing whitespace only (preserve internal spaces for FlyV1 tokens)
           export FLY_API_TOKEN=$(echo "${{ secrets.FLY_API_TOKEN }}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-          flyctl deploy --remote-only
+          flyctl deploy --remote-only \
+            --build-arg COMPOSER_MAGENTO_USERNAME="${{ secrets.COMPOSER_MAGENTO_USERNAME }}" \
+            --build-arg COMPOSER_MAGENTO_PASSWORD="${{ secrets.COMPOSER_MAGENTO_PASSWORD }}"
