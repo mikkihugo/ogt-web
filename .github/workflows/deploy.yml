@@ -13,6 +13,8 @@ jobs:
     runs-on: mikkihugo-runners
     permissions:
       contents: read
+      id-token: write  # For cosign OIDC signing
+      packages: write  # For attestations
     steps:
       - uses: actions/checkout@v4
 
@@ -20,7 +22,15 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
+      - name: Install cosign and syft
+        run: |
+          # Install cosign for signing
+          nix profile install nixpkgs#cosign
+          # Install syft for SBOM generation
+          nix profile install nixpkgs#syft
+
       - name: Build and push container with nix2container
+        id: build
         run: |
           echo "Building and pushing layered container with nix2container..."
           # Authenticate with Fly registry
@@ -28,8 +38,48 @@ jobs:
 
           # Build and stream directly to registry (no docker daemon needed!)
           nix run .#container.copyToRegistry --print-build-logs
+
+          # Get the image digest
+          DIGEST=$(nix eval .#container.imageDigest --raw 2>/dev/null || echo "")
+          echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
+          echo "Image pushed: registry.fly.io/ogt-app:latest"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Generate SBOM
+        run: |
+          echo "Generating SBOM..."
+          # Generate SBOM from Nix closure
+          nix path-info -rsSh .#container --json > sbom-nix.json
+
+          # Also generate CycloneDX SBOM with syft
+          syft registry.fly.io/ogt-app:latest -o cyclonedx-json > sbom-cyclonedx.json
+
+          echo "SBOM generated: sbom-nix.json, sbom-cyclonedx.json"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Sign container with cosign (keyless)
+        run: |
+          echo "Signing container with cosign (OIDC keyless)..."
+          cosign sign --yes registry.fly.io/ogt-app:latest
+
+          # Attach SBOM attestation
+          cosign attest --yes --predicate sbom-cyclonedx.json \
+            --type cyclonedx registry.fly.io/ogt-app:latest
+
+          echo "Container signed and SBOM attested"
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: |
+            sbom-nix.json
+            sbom-cyclonedx.json
 
       - name: Set Fly Secrets
         run: |
