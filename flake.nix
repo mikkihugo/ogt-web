@@ -145,7 +145,8 @@
           # -------------------------------------------------------------------
           container = n2c.buildImage {
             name = "registry.fly.io/ogt-web";
-            tag = "latest";
+            # Use git commit SHA for version tag (no "latest")
+            tag = builtins.substring 0 8 (self.rev or "dev");
 
             # Maximum layers for optimal caching
             maxLayers = 100;
