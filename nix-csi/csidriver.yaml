@@ -1,0 +1,16 @@
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: nix.csi.store
+spec:
+  attachRequired: false
+  podInfoOnMount: true
+  volumeLifecycleModes:
+  - Ephemeral
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nix-csi
+provisioner: nix.csi.store
+volumeBindingMode: Immediate

@@ -1,0 +1,128 @@
+# =============================================================================
+# FlakeCache Nix Daemon DaemonSet
+# =============================================================================
+#
+# PURPOSE:
+# Provides a shared Nix daemon on each Kubernetes node that:
+# 1. Manages a shared /nix/store across all pods on the node
+# 2. Enforces signature verification (require-sigs=true)
+# 3. Pulls from configured binary caches (nixos.org + Attic)
+#
+# ARCHITECTURE:
+# - Runs as a privileged DaemonSet on every node
+# - Exposes nix-daemon socket at /var/run/nix-daemon-socket
+# - Stores /nix at /var/flakecache/nix on host
+# - GitHub Actions runners connect via NIX_REMOTE=daemon
+#
+# SECURITY:
+# - require-sigs=true: Only signed store paths are accepted
+# - Trusted public keys: cache.nixos.org + your Attic cache
+# - Daemon runs as root but clients don't need privileges
+#
+# INTEGRATION WITH RUNNERS:
+# Runners mount:
+#   /nix (read-only) -> /var/flakecache/nix
+#   /nix/var/nix/daemon-socket -> /var/run/nix-daemon-socket
+# And set NIX_REMOTE=daemon to communicate via socket
+#
+# =============================================================================
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nix-daemon
+  namespace: nix-csi
+  labels:
+    app.kubernetes.io/name: nix-daemon
+    app.kubernetes.io/part-of: flakecache
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nix-daemon
+      app.kubernetes.io/part-of: flakecache
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nix-daemon
+        app.kubernetes.io/part-of: flakecache
+    spec:
+      hostPID: false
+      initContainers:
+      - name: init-nix-store
+        image: nixos/nix:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Initialize /nix on the host if it's empty
+          if [ ! -f /nix-volume/nix/store/.initialized ]; then
+            echo "Initializing Nix store on host..."
+            mkdir -p /nix-volume/nix
+            cp -a /nix/* /nix-volume/nix/ 2>/dev/null || true
+            touch /nix-volume/nix/store/.initialized
+            echo "Nix store initialized"
+          else
+            echo "Nix store already initialized"
+          fi
+        volumeMounts:
+        - name: nix-store
+          mountPath: /nix-volume
+      containers:
+      - name: nix-daemon
+        image: nixos/nix:latest
+        securityContext:
+          privileged: true
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Configure Nix with strict signature requirements
+          mkdir -p /etc/nix
+          cat > /etc/nix/nix.conf << 'EOF'
+          experimental-features = nix-command flakes
+          substituters = https://cache.nixos.org http://attic.actions-runner-system.svc.cluster.local:8080/singularity
+          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= singularity:nsWPgp0mIC/OZdqnm0UXSOblL37jAHny6zYhqyu6ckk=
+          require-sigs = true
+          max-jobs = auto
+          keep-outputs = true
+          builders-use-substitutes = true
+          EOF
+
+          # Create socket directory
+          mkdir -p /nix/var/nix/daemon-socket
+          chmod 755 /nix/var/nix/daemon-socket
+
+          echo "Starting nix-daemon..."
+          exec nix-daemon
+        env:
+        - name: NIX_REMOTE
+          value: ""
+        volumeMounts:
+        - name: nix-store
+          mountPath: /nix
+          subPath: nix
+        - name: nix-socket
+          mountPath: /nix/var/nix/daemon-socket
+      volumes:
+      - name: nix-store
+        hostPath:
+          path: /var/flakecache
+          type: DirectoryOrCreate
+      - name: nix-socket
+        hostPath:
+          path: /var/run/nix-daemon-socket
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nix-daemon
+  namespace: nix-csi
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: nix-daemon
+    app.kubernetes.io/part-of: flakecache

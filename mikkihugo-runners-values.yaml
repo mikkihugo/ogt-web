@@ -1,3 +1,55 @@
+# =============================================================================
+# FlakeCache GitHub Actions Runner Configuration
+# =============================================================================
+#
+# PURPOSE:
+# Configures self-hosted GitHub Actions runners with FlakeCache integration:
+# 1. Pre-mounted /nix store (shared across jobs via nix-daemon DaemonSet)
+# 2. Docker-in-Docker support for container builds
+# 3. Attic binary cache integration
+#
+# ARCHITECTURE:
+#
+#   ┌─────────────────────────────────────────────────────────────────────┐
+#   │                         Kubernetes Node                              │
+#   │  ┌─────────────────────────────────────────────────────────────┐   │
+#   │  │              nix-daemon DaemonSet (nix-csi namespace)        │   │
+#   │  │  - Manages /var/flakecache/nix (host path)                   │   │
+#   │  │  - Exposes socket at /var/run/nix-daemon-socket              │   │
+#   │  │  - Enforces require-sigs=true                                │   │
+#   │  └─────────────────────────────────────────────────────────────┘   │
+#   │                              │                                       │
+#   │                              │ socket                                │
+#   │                              ▼                                       │
+#   │  ┌─────────────────────────────────────────────────────────────┐   │
+#   │  │              GitHub Actions Runner Pod                        │   │
+#   │  │  ┌─────────────────┐  ┌─────────────────┐                    │   │
+#   │  │  │  runner (main)   │  │  dind (sidecar) │                    │   │
+#   │  │  │                 │  │                 │                    │   │
+#   │  │  │ FLAKECACHE_     │  │ Docker daemon   │                    │   │
+#   │  │  │ RUNNER=true     │  │ for builds      │                    │   │
+#   │  │  │                 │  │                 │                    │   │
+#   │  │  │ NIX_REMOTE=     │  └─────────────────┘                    │   │
+#   │  │  │ daemon          │                                         │   │
+#   │  │  │                 │                                         │   │
+#   │  │  │ /nix (ro) ──────┼──> /var/flakecache/nix (host)           │   │
+#   │  │  │ /nix/.../socket ┼──> /var/run/nix-daemon-socket (host)    │   │
+#   │  │  └─────────────────┘                                         │   │
+#   │  └─────────────────────────────────────────────────────────────┘   │
+#   └─────────────────────────────────────────────────────────────────────┘
+#
+# WORKFLOW DETECTION:
+# The flakecache/nix-installer action detects FlakeCache runners via:
+#   1. FLAKECACHE_RUNNER=true environment variable
+#   2. Executable at /nix/var/nix/profiles/default/bin/nix
+# When detected, it skips installation and uses pre-mounted Nix.
+#
+# SECURITY:
+# - /nix mounted read-only (writes go through daemon)
+# - Daemon enforces signature verification
+# - Trusted keys: cache.nixos.org + Attic cache
+#
+# =============================================================================
 containerMode:
   type: dind
 controllerServiceAccount:
@@ -10,6 +62,9 @@ minRunners: 0
 template:
   spec:
     containers:
+    # =========================================================================
+    # Main Runner Container
+    # =========================================================================
     - args:
       - |
         exec /home/runner/run.sh
@@ -17,12 +72,18 @@ template:
       - /bin/bash
       - -c
       env:
+      # Standard ARC configuration
       - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
         value: "false"
       - name: RUNNER_SUPPORTS_CONTAINERS
         value: "true"
+      # FlakeCache detection - nix-installer checks this
       - name: FLAKECACHE_RUNNER
         value: "true"
+      # Nix daemon mode - all Nix operations go through socket
+      - name: NIX_REMOTE
+        value: daemon
+      # Attic binary cache for custom packages
       - name: ATTIC_SERVER
         value: http://attic.actions-runner-system.svc.cluster.local:8080
       - name: ATTIC_TOKEN
@@ -38,10 +99,19 @@ template:
         requests:
           ephemeral-storage: 5Gi
       volumeMounts:
+      # Shared Nix store from nix-daemon DaemonSet (read-only for security)
       - mountPath: /nix
         name: nix-store
+        readOnly: true
+      # Daemon socket for Nix operations (overwrites /nix/var/nix/daemon-socket)
+      - mountPath: /nix/var/nix/daemon-socket
+        name: nix-socket
+      # Workspace for job files
       - mountPath: /home/runner/_work
         name: work
+    # =========================================================================
+    # Docker-in-Docker Sidecar
+    # =========================================================================
     - image: docker:dind
       name: dind
       securityContext:
@@ -51,11 +121,23 @@ template:
         name: work
       - mountPath: /var/lib/docker
         name: dind-storage
+    # =========================================================================
+    # Volumes
+    # =========================================================================
     volumes:
+    # Nix store from nix-daemon DaemonSet (initialized by init container)
     - name: nix-store
-      persistentVolumeClaim:
-        claimName: nix-store-pvc
+      hostPath:
+        path: /var/flakecache/nix
+        type: Directory
+    # Daemon socket exposed by nix-daemon DaemonSet
+    - name: nix-socket
+      hostPath:
+        path: /var/run/nix-daemon-socket
+        type: Directory
+    # Ephemeral workspace
     - emptyDir: {}
       name: work
+    # Docker storage (ephemeral)
     - emptyDir: {}
       name: dind-storage

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nix-csi-config
+  namespace: nix-csi
+data:
+  nix.conf: |
+    experimental-features = nix-command flakes
+    substituters = https://cache.nixos.org http://attic.actions-runner-system.svc.cluster.local:8080/singularity
+    trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= singularity:nsWPgp0mIC/OZdqnm0UXSOblL37jAHny6zYhqyu6ckk=
+    require-sigs = true
+    max-jobs = auto
+    keep-outputs = true
+    builders-use-substitutes = true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nix-cache-config
+  namespace: nix-csi
+data:
+  nix.conf: |
+    experimental-features = nix-command flakes
+    substituters = https://cache.nixos.org
+    trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+    require-sigs = true
+    max-jobs = auto
