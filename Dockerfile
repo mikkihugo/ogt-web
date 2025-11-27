@@ -18,6 +18,7 @@ RUN apk add --no-cache \
     socat \
     bind-tools \
     procps \
+    mariadb \
     mariadb-client \
     unzip \
     zip \

@@ -109,7 +109,7 @@
           bind
           unzip
           zip
-          mariadb-client
+          mariadb  # Full MariaDB server (includes mysql_install_db, mysqld_safe)
         ];
 
         # =====================================================================
@@ -155,6 +155,11 @@
               mkdir -p run
               mkdir -p tmp
               chmod 1777 tmp
+
+              # Copy start script and traefik config
+              cp ${./docker/start.sh} start.sh
+              chmod +x start.sh
+              cp -r ${./docker/traefik}/* etc/traefik/
             '';
 
             config = {

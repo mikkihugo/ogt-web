@@ -3,7 +3,9 @@ app = "ogt-app"
 primary_region = "arn"
 
 [build]
-  dockerfile = "Dockerfile"
+  # Image built with Nix flake and pushed to Fly registry
+  # See .github/workflows/deploy.yml
+  image = "registry.fly.io/ogt-app:latest"
 
 [env]
   SITE_NAME = "orgasmtoy.com"

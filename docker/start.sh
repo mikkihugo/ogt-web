@@ -109,13 +109,15 @@ if [ ! -f "/var/www/html/app/etc/env.php" ]; then
         --language=en_US --currency=USD --timezone=UTC --use-rewrites=1
 fi
 
-# 5. Start Web Services
-echo "Starting PHP-FPM and Nginx..."
-php-fpm -D
-nginx -g "daemon off;"
-
-# 6. Start Prometheus Exporters for Telemetry
+# 5. Start Prometheus Exporters for Telemetry
 echo "Starting Prometheus exporters..."
-/usr/local/bin/mysqld_exporter --config.my-cnf /etc/.mysqld_exporter.cnf --web.listen-address=":9104" &
-/usr/local/bin/redis_exporter --redis.addr localhost:6379 --web.listen-address=":9121" &
-/usr/local/bin/php-fpm_exporter --phpfpm.scrape-uri http://localhost:9000/status -web.listen-address=":9253" &
+mysqld_exporter --config.my-cnf /etc/.mysqld_exporter.cnf --web.listen-address=":9104" &
+redis_exporter --redis.addr localhost:6379 --web.listen-address=":9121" &
+php-fpm_exporter server --phpfpm.scrape-uri tcp://127.0.0.1:9000/status --web.listen-address=":9253" &
+
+# 6. Start Web Services
+echo "Starting PHP-FPM..."
+php-fpm -D
+
+echo "Starting Traefik..."
+exec traefik --configFile=/etc/traefik/traefik.yml
