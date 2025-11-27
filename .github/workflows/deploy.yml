@@ -10,7 +10,11 @@ on:
 jobs:
   deploy:
     name: Deploy ogt-web to Fly.io
-    runs-on: mikkihugo-runners
+    # Runner options:
+    # - "ubuntu-latest" - GitHub hosted (free, simple, good for testing)
+    # - "mikkihugo-runners" - Arc self-hosted runners (production, faster builds)
+    # - "[self-hosted, nix, linux]" - Explicit labels for future GitHub App scaling
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write      # For attestations
