@@ -39,7 +39,8 @@ jobs:
           import base64
           import json
           import os
-          token = base64.b64encode(b'x:${{ secrets.FLY_API_TOKEN }}').decode()
+          fly_token = os.environ.get('FLY_API_TOKEN', '')
+          token = base64.b64encode(f'x:{fly_token}'.encode()).decode()
           auth = {"auths": {"registry.fly.io": {"auth": token}}}
           with open(os.path.expanduser("~/.config/containers/auth.json"), "w") as f:
               json.dump(auth, f)
