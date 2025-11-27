@@ -33,21 +33,8 @@ jobs:
         run: |
           echo "Building and pushing layered container with nix2container..."
           
-          # Create OCI registry credentials for nix2container
-          mkdir -p ~/.config/containers
-          python3 << 'PYTHON'
-          import base64
-          import json
-          import os
-          fly_token = os.environ.get('FLY_API_TOKEN', '')
-          token = base64.b64encode(f'x:{fly_token}'.encode()).decode()
-          auth = {"auths": {"registry.fly.io": {"auth": token}}}
-          with open(os.path.expanduser("~/.config/containers/auth.json"), "w") as f:
-              json.dump(auth, f)
-          PYTHON
-          
-          # Export auth file location for OCI clients (skopeo, podman, etc)
-          export REGISTRY_AUTH_FILE=~/.config/containers/auth.json
+          # Authenticate with Fly registry using flyctl
+          flyctl auth token | flyctl auth docker --token-stdin
           
           # Build and stream directly to registry (nix2container uses OCI creds, not docker)
           nix run .#container.copyToRegistry --print-build-logs
