@@ -11,7 +11,6 @@ jobs:
   deploy:
     name: Deploy magneto to Fly.io
     runs-on: mikkihugo-runners
-    container: nixos/nix:latest
     permissions:
       contents: read
     steps:
