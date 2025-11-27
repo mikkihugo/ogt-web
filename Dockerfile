@@ -16,11 +16,15 @@ RUN apk add --no-cache \
     oniguruma-dev \
     openssh-client \
     rsync \
+    socat \
+    bind-tools \
+    procps \
     unzip \
     zip \
     mariadb \
     mariadb-client \
-    mariadb-ctl
+    mariadb-ctl \
+    galera
 
 # Install PHP extensions required by Magento
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -105,41 +109,11 @@ EXPOSE 8080
 # Update Nginx to listen on 8080
 RUN sed -i 's/listen 80/listen 8080/g' /etc/nginx/http.d/default.conf
 
-# Create start script
-RUN echo '#!/bin/bash' > /start.sh && \
-    echo 'set -e' >> /start.sh && \
-    echo '# Initialize MariaDB if not present' >> /start.sh && \
-    echo 'if [ ! -d "/var/lib/mysql/mysql" ]; then' >> /start.sh && \
-    echo '  echo "Initializing MariaDB..."' >> /start.sh && \
-    echo '  mysql_install_db --user=mysql --datadir=/var/lib/mysql' >> /start.sh && \
-    echo 'fi' >> /start.sh && \
-    echo '# Start MariaDB in background' >> /start.sh && \
-    echo 'mysqld_safe --datadir=/var/lib/mysql &' >> /start.sh && \
-    echo 'echo "Waiting for MariaDB to start..."' >> /start.sh && \
-    echo 'sleep 10' >> /start.sh && \
-    echo '# Create DB and User if needed' >> /start.sh && \
-    echo 'mysql -e "CREATE DATABASE IF NOT EXISTS magento;"' >> /start.sh && \
-    echo 'mysql -e "CREATE USER IF NOT EXISTS \`magento\`@\`localhost\` IDENTIFIED BY \"magento\";"' >> /start.sh && \
-    echo 'mysql -e "GRANT ALL PRIVILEGES ON magento.* TO \`magento\`@\`localhost\`;"' >> /start.sh && \
-    echo 'mysql -e "FLUSH PRIVILEGES;"' >> /start.sh && \
-    echo '# Install Magento if env.php is missing' >> /start.sh && \
-    echo 'if [ ! -f "/var/www/html/app/etc/env.php" ]; then' >> /start.sh && \
-    echo '  echo "Installing Magento..."' >> /start.sh && \
-    echo '  cd /var/www/html && bin/magento setup:install \' >> /start.sh && \
-    echo '    --base-url=${MAGENTO_BASE_URL:-http://localhost:8080/} \' >> /start.sh && \
-    echo '    --db-host=localhost \' >> /start.sh && \
-    echo '    --db-name=magento \' >> /start.sh && \
-    echo '    --db-user=magento \' >> /start.sh && \
-    echo '    --db-password=magento \' >> /start.sh && \
-    echo '    --admin-firstname=${ADMIN_FIRSTNAME:-Admin} \' >> /start.sh && \
-    echo '    --admin-lastname=${ADMIN_LASTNAME:-User} \' >> /start.sh && \
-    echo '    --admin-email=${ADMIN_EMAIL:-admin@example.com} \' >> /start.sh && \
-    echo '    --admin-user=${ADMIN_USER:-admin} \' >> /start.sh && \
-    echo '    --admin-password=${ADMIN_PASSWORD:-Admin123!} \' >> /start.sh && \
-    echo '    --language=en_US --currency=USD --timezone=UTC --use-rewrites=1' >> /start.sh && \
-    echo 'fi' >> /start.sh && \
-    echo 'php-fpm -D' >> /start.sh && \
-    echo 'nginx -g "daemon off;"' >> /start.sh && \
-    chmod +x /start.sh
+# Copy Galera configuration
+COPY docker/mariadb/galera.cnf /etc/my.cnf.d/galera.cnf
+
+# Copy start script
+COPY docker/start.sh /start.sh
+RUN chmod +x /start.sh
 
 CMD ["/start.sh"]
