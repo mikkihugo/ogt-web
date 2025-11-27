@@ -24,7 +24,7 @@
 #
 # =============================================================================
 {
-  description = "Magento 2 Hyper-converged Deployment on Fly.io with FlakeCache";
+  description = "OGT-Web: Magento 2 E-commerce on Fly.io with Nix + FlakeCache";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
@@ -209,17 +209,15 @@
           ];
 
           shellHook = ''
+            export IN_NIX_SHELL=1
+            export NIX_SHELL_PROJECT="ogt-web"
+            echo "🐳 OGT-Web Nix Shell"
+            echo "PHP 8.3 | Composer | MySQL 10.11 | Docker | Flyctl"
             echo ""
-            echo "=== Magneto-Web Development Shell ==="
-            echo "PHP: $(php --version | head -1)"
-            echo "Composer: $(composer --version 2>/dev/null | head -1)"
-            echo ""
-            echo "Build commands:"
-            echo "  nix build .#container         # Build layered image"
-            echo "  nix build .#container-stream  # Build streamable image"
-            echo ""
-            echo "Load to Docker:"
-            echo "  docker load < result"
+            echo "Commands:"
+            echo "  nix build .#container   # Build Docker image"
+            echo "  git push origin master  # Deploy"
+            echo "  fly logs --follow       # Monitor"
             echo ""
           '';
         };
