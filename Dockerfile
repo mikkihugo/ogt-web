@@ -107,21 +107,16 @@ FROM base AS final
 # Copy built site from build stage
 COPY --from=build --chown=www-data:www-data /var/www/html/magento2 /var/www/html
 
-# Install Prometheus exporters with retries
-RUN for i in 1 2 3; do \
-      wget -q --tries=3 --timeout=30 -O /tmp/php-fpm_exporter.tar.gz \
-        https://github.com/hipages/php-fpm_exporter/releases/download/v1.2.0/php-fpm_exporter_1.2.0_linux_amd64.tar.gz && break || sleep 5; \
-    done && \
+# Install Prometheus exporters using curl with better error handling
+RUN apk add --no-cache ca-certificates && \
+    curl -fsSL -o /tmp/php-fpm_exporter.tar.gz \
+      https://github.com/hipages/php-fpm_exporter/releases/download/v1.2.0/php-fpm_exporter_1.2.0_linux_amd64.tar.gz && \
     tar -xzf /tmp/php-fpm_exporter.tar.gz -C /usr/local/bin/ php-fpm_exporter && \
-    for i in 1 2 3; do \
-      wget -q --tries=3 --timeout=30 -O /tmp/mysqld_exporter.tar.gz \
-        https://github.com/prometheus/mysqld_exporter/releases/download/v0.15.1/mysqld_exporter-0.15.1.linux-amd64.tar.gz && break || sleep 5; \
-    done && \
+    curl -fsSL -o /tmp/mysqld_exporter.tar.gz \
+      https://github.com/prometheus/mysqld_exporter/releases/download/v0.15.1/mysqld_exporter-0.15.1.linux-amd64.tar.gz && \
     tar -xzf /tmp/mysqld_exporter.tar.gz --strip-components=1 -C /usr/local/bin/ && \
-    for i in 1 2 3; do \
-      wget -q --tries=3 --timeout=30 -O /tmp/redis_exporter.tar.gz \
-        https://github.com/oliver006/redis_exporter/releases/download/v1.54.0/redis_exporter-v1.54.0.linux-amd64.tar.gz && break || sleep 5; \
-    done && \
+    curl -fsSL -o /tmp/redis_exporter.tar.gz \
+      https://github.com/oliver006/redis_exporter/releases/download/v1.54.0/redis_exporter-v1.54.0.linux-amd64.tar.gz && \
     tar -xzf /tmp/redis_exporter.tar.gz --strip-components=1 -C /usr/local/bin/ && \
     chmod +x /usr/local/bin/php-fpm_exporter /usr/local/bin/mysqld_exporter /usr/local/bin/redis_exporter && \
     rm -f /tmp/*.tar.gz
