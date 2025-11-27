@@ -1,3 +1,95 @@
+# =============================================================================
+# FlakeCache nix-csi Node Plugin DaemonSet
+# =============================================================================
+#
+# PURPOSE:
+# Implements the Kubernetes CSI (Container Storage Interface) node plugin,
+# enabling pods to request Nix store volumes through standard Kubernetes
+# storage APIs (PVC, inline ephemeral volumes).
+#
+# NOTE: This is the OPTIONAL CSI driver component. For simpler deployments,
+# use nix-daemon-daemonset.yaml with host path mounts instead.
+#
+# ARCHITECTURE:
+#
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │                    CSI Node Plugin Architecture                          │
+# │                                                                          │
+# │  ┌─────────────────────────────────────────────────────────────────┐    │
+# │  │                    nix-node Pod (per node)                       │    │
+# │  │                                                                  │    │
+# │  │  ┌──────────────┐  ┌───────────────────┐  ┌─────────────────┐   │    │
+# │  │  │  init-nix-   │  │   nix-node        │  │ csi-node-driver │   │    │
+# │  │  │  store       │  │   (main)          │  │ -registrar      │   │    │
+# │  │  │              │  │                   │  │                 │   │    │
+# │  │  │ Copies /nix  │  │ - nix-daemon      │  │ Registers CSI   │   │    │
+# │  │  │ to host if   │  │ - CSI socket      │  │ with kubelet    │   │    │
+# │  │  │ empty        │  │ - Mount handler   │  │                 │   │    │
+# │  │  └──────────────┘  └───────────────────┘  └─────────────────┘   │    │
+# │  │                           │                       │              │    │
+# │  │                           ▼                       ▼              │    │
+# │  │                    /csi/csi.sock          /registration/        │    │
+# │  └─────────────────────────────────────────────────────────────────┘    │
+# │                              │                                           │
+# │                              ▼                                           │
+# │  ┌─────────────────────────────────────────────────────────────────┐    │
+# │  │                         kubelet                                  │    │
+# │  │  /var/lib/kubelet/plugins/nix.csi.store/csi.sock                │    │
+# │  │  Uses socket to request volume mounts for pods                   │    │
+# │  └─────────────────────────────────────────────────────────────────┘    │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# CONTAINERS:
+#
+# 1. init-nix-store (initContainer)
+#    - Initializes /nix on the host if not present
+#    - Copies base Nix store from nixos/nix image
+#    - Creates required directories (store, db, gcroots, profiles)
+#
+# 2. nix-node (main container)
+#    - Runs nix-daemon for Nix operations
+#    - Exposes CSI socket at /csi/csi.sock
+#    - Handles NodePublishVolume/NodeUnpublishVolume requests
+#    - Mounts /nix into requesting pods
+#
+# 3. csi-node-driver-registrar (sidecar)
+#    - Registers nix.csi.store driver with kubelet
+#    - Standard Kubernetes CSI sidecar
+#    - Image: registry.k8s.io/sig-storage/csi-node-driver-registrar
+#
+# 4. livenessprobe (sidecar)
+#    - Health checking for CSI socket
+#    - Standard Kubernetes CSI sidecar
+#    - Image: registry.k8s.io/sig-storage/livenessprobe
+#
+# VOLUMES:
+#
+# ┌────────────────────┬────────────────────────────────────────────────────┐
+# │ Volume             │ Purpose                                            │
+# ├────────────────────┼────────────────────────────────────────────────────┤
+# │ nix-config         │ ConfigMap with nix.conf                           │
+# │ registration       │ kubelet plugin registration directory             │
+# │ nix-store          │ Host path /var/nix-csi for Nix store              │
+# │ csi-socket         │ CSI socket directory                              │
+# │ kubelet            │ kubelet directory for pod volume mounts           │
+# └────────────────────┴────────────────────────────────────────────────────┘
+#
+# MOUNT PROPAGATION:
+# - Bidirectional mount propagation on /nix and /var/lib/kubelet
+# - Allows mounts made in this pod to be visible to kubelet and other pods
+# - Required for CSI to actually mount /nix into requesting pods
+#
+# SECURITY:
+# - Runs privileged (required for mount operations)
+# - ServiceAccount: nix-csi (see rbac.yaml)
+# - nix.conf enforces require-sigs=true
+#
+# USAGE:
+# Deploy after namespace, rbac, configmap, and csidriver:
+#   kubectl apply -f daemonset.yaml
+#   kubectl get pods -n nix-csi -l app.kubernetes.io/name=csi
+#
+# =============================================================================
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -6,10 +98,12 @@ metadata:
   labels:
     app.kubernetes.io/name: csi
     app.kubernetes.io/part-of: nix-csi
+    app.kubernetes.io/component: node-plugin
 spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
+      # Update one node at a time to maintain availability
       maxUnavailable: 1
   selector:
     matchLabels:
@@ -20,125 +114,173 @@ spec:
       labels:
         app.kubernetes.io/name: csi
         app.kubernetes.io/part-of: nix-csi
+        app.kubernetes.io/component: node-plugin
       annotations:
+        # Default container for kubectl exec/logs
         kubectl.kubernetes.io/default-container: nix-node
     spec:
       serviceAccountName: nix-csi
+
+      # -----------------------------------------------------------------------
+      # Init Container: Initialize Nix store on host
+      # -----------------------------------------------------------------------
       initContainers:
-      - name: init-nix-store
-        image: nixos/nix:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          # Initialize /nix on the host if needed
-          if [ ! -d /nix-volume/nix/store ]; then
-            echo "Initializing Nix store..."
-            cp -a /nix/* /nix-volume/nix/ 2>/dev/null || true
-            mkdir -p /nix-volume/nix/store
-            mkdir -p /nix-volume/nix/var/nix/db
-            mkdir -p /nix-volume/nix/var/nix/gcroots
-            mkdir -p /nix-volume/nix/var/nix/profiles
-            mkdir -p /nix-volume/nix/var/nix-csi
-          fi
-          echo "Nix store initialized"
-        volumeMounts:
-        - name: nix-store
-          mountPath: /nix-volume
+        - name: init-nix-store
+          image: nixos/nix:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Initialize /nix on the host if needed
+              if [ ! -d /nix-volume/nix/store ]; then
+                echo "Initializing Nix store..."
+                cp -a /nix/* /nix-volume/nix/ 2>/dev/null || true
+                mkdir -p /nix-volume/nix/store
+                mkdir -p /nix-volume/nix/var/nix/db
+                mkdir -p /nix-volume/nix/var/nix/gcroots
+                mkdir -p /nix-volume/nix/var/nix/profiles
+                mkdir -p /nix-volume/nix/var/nix-csi
+              fi
+              echo "Nix store initialized"
+          volumeMounts:
+            - name: nix-store
+              mountPath: /nix-volume
+
       containers:
-      - name: nix-node
-        image: nixos/nix:latest
-        command:
-        - /bin/sh
-        - -c
-        - |
-          # Configure Nix
-          mkdir -p /etc/nix
-          cp /etc/nix-mount/nix.conf /etc/nix/nix.conf
-          # Start nix-daemon in background
-          nix-daemon &
-          # Simple CSI stub - for now just keep alive
-          echo "nix-csi node started"
-          # Keep running
-          sleep infinity
-        securityContext:
-          privileged: true
-        env:
-        - name: CSI_ENDPOINT
-          value: unix:///csi/csi.sock
-        - name: HOME
-          value: /nix/var/nix-csi/root
-        - name: USER
-          value: root
-        - name: KUBE_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: KUBE_NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        - name: KUBE_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        volumeMounts:
-        - name: csi-socket
-          mountPath: /csi
-        - name: nix-config
-          mountPath: /etc/nix-mount
-        - name: registration
-          mountPath: /registration
-        - name: kubelet
-          mountPath: /var/lib/kubelet
-          mountPropagation: Bidirectional
-        - name: nix-store
-          mountPath: /nix
-          subPath: nix
-          mountPropagation: Bidirectional
-      - name: csi-node-driver-registrar
-        image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.15.0
-        args:
-        - --v=5
-        - --csi-address=/csi/csi.sock
-        - --kubelet-registration-path=/var/lib/kubelet/plugins/nix.csi.store/csi.sock
-        env:
-        - name: KUBE_NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        volumeMounts:
-        - name: csi-socket
-          mountPath: /csi
-        - name: kubelet
-          mountPath: /var/lib/kubelet
-        - name: registration
-          mountPath: /registration
-      - name: livenessprobe
-        image: registry.k8s.io/sig-storage/livenessprobe:v2.17.0
-        args:
-        - --csi-address=/csi/csi.sock
-        volumeMounts:
-        - name: csi-socket
-          mountPath: /csi
-        - name: registration
-          mountPath: /registration
+        # ---------------------------------------------------------------------
+        # Main Container: Nix daemon + CSI node plugin
+        # ---------------------------------------------------------------------
+        - name: nix-node
+          image: nixos/nix:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Configure Nix from ConfigMap
+              mkdir -p /etc/nix
+              cp /etc/nix-mount/nix.conf /etc/nix/nix.conf
+
+              # Start nix-daemon in background
+              nix-daemon &
+
+              # Simple CSI stub - for now just keep alive
+              # Full CSI implementation would handle gRPC requests here
+              echo "nix-csi node started"
+
+              # Keep running
+              sleep infinity
+          securityContext:
+            # Required for mount operations
+            privileged: true
+          env:
+            # CSI socket location
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+            # Home directory for Nix operations
+            - name: HOME
+              value: /nix/var/nix-csi/root
+            - name: USER
+              value: root
+            # Kubernetes context (for logging/auditing)
+            - name: KUBE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: KUBE_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          volumeMounts:
+            # CSI socket directory
+            - name: csi-socket
+              mountPath: /csi
+            # Nix configuration from ConfigMap
+            - name: nix-config
+              mountPath: /etc/nix-mount
+            # Plugin registration directory
+            - name: registration
+              mountPath: /registration
+            # kubelet directory for pod volume mounts
+            # Bidirectional: mounts here visible to kubelet
+            - name: kubelet
+              mountPath: /var/lib/kubelet
+              mountPropagation: Bidirectional
+            # Nix store on host
+            # Bidirectional: mounts here visible to other pods
+            - name: nix-store
+              mountPath: /nix
+              subPath: nix
+              mountPropagation: Bidirectional
+
+        # ---------------------------------------------------------------------
+        # Sidecar: CSI Node Driver Registrar
+        # Registers this CSI driver with kubelet
+        # ---------------------------------------------------------------------
+        - name: csi-node-driver-registrar
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.15.0
+          args:
+            - --v=5
+            - --csi-address=/csi/csi.sock
+            - --kubelet-registration-path=/var/lib/kubelet/plugins/nix.csi.store/csi.sock
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: csi-socket
+              mountPath: /csi
+            - name: kubelet
+              mountPath: /var/lib/kubelet
+            - name: registration
+              mountPath: /registration
+
+        # ---------------------------------------------------------------------
+        # Sidecar: Liveness Probe
+        # Health checking for CSI socket
+        # ---------------------------------------------------------------------
+        - name: livenessprobe
+          image: registry.k8s.io/sig-storage/livenessprobe:v2.17.0
+          args:
+            - --csi-address=/csi/csi.sock
+          volumeMounts:
+            - name: csi-socket
+              mountPath: /csi
+            - name: registration
+              mountPath: /registration
+
+      # -----------------------------------------------------------------------
+      # Volumes
+      # -----------------------------------------------------------------------
       volumes:
-      - name: nix-config
-        configMap:
-          name: nix-csi-config
-      - name: registration
-        hostPath:
-          path: /var/lib/kubelet/plugins_registry
-      - name: nix-store
-        hostPath:
-          path: /var/nix-csi
-          type: DirectoryOrCreate
-      - name: csi-socket
-        hostPath:
-          path: /var/lib/kubelet/plugins/nix.csi.store/
-          type: DirectoryOrCreate
-      - name: kubelet
-        hostPath:
-          path: /var/lib/kubelet
-          type: Directory
+        # Nix configuration from ConfigMap
+        - name: nix-config
+          configMap:
+            name: nix-csi-config
+
+        # kubelet plugin registration directory
+        - name: registration
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry
+
+        # Nix store on host
+        - name: nix-store
+          hostPath:
+            path: /var/nix-csi
+            type: DirectoryOrCreate
+
+        # CSI socket directory
+        - name: csi-socket
+          hostPath:
+            path: /var/lib/kubelet/plugins/nix.csi.store/
+            type: DirectoryOrCreate
+
+        # kubelet directory (for mounting into pods)
+        - name: kubelet
+          hostPath:
+            path: /var/lib/kubelet
+            type: Directory

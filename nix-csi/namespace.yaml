@@ -1,4 +1,40 @@
+# =============================================================================
+# FlakeCache nix-csi Namespace
+# =============================================================================
+#
+# PURPOSE:
+# Isolates all nix-csi components in a dedicated namespace for:
+# 1. Security isolation - RBAC policies scoped to this namespace
+# 2. Resource management - Quotas and limits can be applied per-namespace
+# 3. Operational clarity - Easy to identify all FlakeCache components
+#
+# COMPONENTS IN THIS NAMESPACE:
+# - nix-daemon DaemonSet: Provides shared Nix store on each node
+# - nix-node DaemonSet: CSI driver node plugin (optional, for PVC support)
+# - ConfigMaps: Nix configuration (substituters, trusted keys)
+# - ServiceAccount + RBAC: Permissions for CSI operations
+#
+# DEPLOYMENT ORDER:
+# 1. namespace.yaml (this file) - Create namespace first
+# 2. rbac.yaml - ServiceAccount and permissions
+# 3. configmap.yaml - Nix configuration
+# 4. csidriver.yaml - Register CSI driver with Kubernetes
+# 5. nix-daemon-daemonset.yaml - Deploy nix-daemon to all nodes
+# 6. daemonset.yaml - Deploy CSI node plugin (optional)
+#
+# USAGE:
+#   kubectl apply -f namespace.yaml
+#   kubectl get all -n nix-csi
+#
+# =============================================================================
 apiVersion: v1
 kind: Namespace
 metadata:
   name: nix-csi
+  labels:
+    app.kubernetes.io/name: nix-csi
+    app.kubernetes.io/part-of: flakecache
+    # Pod security standards - privileged required for nix-daemon
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

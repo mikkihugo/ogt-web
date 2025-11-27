@@ -1,41 +1,128 @@
+# =============================================================================
+# FlakeCache nix-csi RBAC Configuration
+# =============================================================================
+#
+# PURPOSE:
+# Defines the security permissions required for the nix-csi CSI driver to:
+# 1. Register itself with Kubernetes as a storage provider
+# 2. Watch and manage persistent volumes and claims
+# 3. Access node information for volume scheduling
+#
+# COMPONENTS:
+#
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │                         RBAC Architecture                                │
+# │                                                                          │
+# │  ServiceAccount: nix-csi                                                │
+# │        │                                                                 │
+# │        │ bound via ClusterRoleBinding                                   │
+# │        ▼                                                                 │
+# │  ClusterRole: nix-csi                                                   │
+# │        │                                                                 │
+# │        ├── nodes: get, list, watch                                      │
+# │        │   (Know which nodes can serve volumes)                         │
+# │        │                                                                 │
+# │        ├── persistentvolumes: get, list, watch, create, delete          │
+# │        │   (Manage PV lifecycle)                                        │
+# │        │                                                                 │
+# │        ├── persistentvolumeclaims: get, list, watch, update             │
+# │        │   (Bind PVCs to PVs)                                           │
+# │        │                                                                 │
+# │        ├── storageclasses: get, list, watch                             │
+# │        │   (Read storage class configuration)                           │
+# │        │                                                                 │
+# │        ├── csinodes: get, list, watch                                   │
+# │        │   (Track CSI driver registration per node)                     │
+# │        │                                                                 │
+# │        └── volumeattachments: get, list, watch                          │
+# │            (Track volume attachment status)                             │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# SECURITY NOTES:
+# - ClusterRole is required (not Role) because PVs are cluster-scoped
+# - No create/delete on nodes - read-only access to cluster topology
+# - No secrets access - Nix cache credentials passed via pod env vars
+# - Principle of least privilege - only permissions CSI needs
+#
+# USAGE:
+#   kubectl apply -f rbac.yaml
+#   kubectl get serviceaccount -n nix-csi
+#   kubectl describe clusterrole nix-csi
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# ServiceAccount
+# Identity used by nix-csi pods to authenticate with Kubernetes API
+# -----------------------------------------------------------------------------
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: nix-csi
   namespace: nix-csi
+  labels:
+    app.kubernetes.io/name: nix-csi
+    app.kubernetes.io/part-of: flakecache
+
 ---
+# -----------------------------------------------------------------------------
+# ClusterRole
+# Defines what actions nix-csi can perform cluster-wide
+# -----------------------------------------------------------------------------
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: nix-csi
+  labels:
+    app.kubernetes.io/name: nix-csi
+    app.kubernetes.io/part-of: flakecache
 rules:
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources: ["persistentvolumes"]
-  verbs: ["get", "list", "watch", "create", "delete"]
-- apiGroups: [""]
-  resources: ["persistentvolumeclaims"]
-  verbs: ["get", "list", "watch", "update"]
-- apiGroups: ["storage.k8s.io"]
-  resources: ["storageclasses"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["storage.k8s.io"]
-  resources: ["csinodes"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["storage.k8s.io"]
-  resources: ["volumeattachments"]
-  verbs: ["get", "list", "watch"]
+  # Node access - required to know where volumes can be mounted
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+
+  # PersistentVolume management - CSI creates PVs for claims
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+
+  # PersistentVolumeClaim access - bind claims to volumes
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+
+  # StorageClass access - read provisioner configuration
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+
+  # CSINode access - track driver registration on nodes
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["csinodes"]
+    verbs: ["get", "list", "watch"]
+
+  # VolumeAttachment access - track attachment lifecycle
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["get", "list", "watch"]
+
 ---
+# -----------------------------------------------------------------------------
+# ClusterRoleBinding
+# Grants the ClusterRole permissions to the ServiceAccount
+# -----------------------------------------------------------------------------
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: nix-csi
+  labels:
+    app.kubernetes.io/name: nix-csi
+    app.kubernetes.io/part-of: flakecache
 subjects:
-- kind: ServiceAccount
-  name: nix-csi
-  namespace: nix-csi
+  - kind: ServiceAccount
+    name: nix-csi
+    namespace: nix-csi
 roleRef:
   kind: ClusterRole
   name: nix-csi
