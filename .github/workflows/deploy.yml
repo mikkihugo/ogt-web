@@ -33,15 +33,6 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Fly.io
-        run: |
-          # Create a Fly API token file from the secret and use it directly
-          mkdir -p ~/.fly
-          cat > ~/.fly/credentials.yml << 'EOF'
-          access_token: ${{ secrets.FLY_API_TOKEN }}
-          EOF
-          
-          # Now deploy using Fly
-          flyctl deploy --remote-only
+        run: flyctl deploy --remote-only
         env:
-          LANG: C.UTF-8
-          LC_ALL: C.UTF-8
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
