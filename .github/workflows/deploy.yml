@@ -35,14 +35,8 @@ jobs:
           
           # Create OCI registry credentials for nix2container
           mkdir -p ~/.config/containers
-          cat > ~/.config/containers/auth.json <<EOF
-          {
-            "auths": {
-              "registry.fly.io": {
-                "auth": "$(echo -n "x:${FLY_API_TOKEN}" | base64)"
-              }
-            }
-          }
+          cat > ~/.config/containers/auth.json << 'EOF'
+          {"auths": {"registry.fly.io": {"auth": "$(echo -n "x:${FLY_API_TOKEN}" | base64)"}}}
           EOF
           
           # Build and stream directly to registry (nix2container uses OCI creds, not docker)
