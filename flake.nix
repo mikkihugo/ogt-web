@@ -29,6 +29,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    nix2container.url = "github:nlewo/nix2container";
+    nix2container.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   # FlakeCache binary cache configuration
@@ -46,10 +48,11 @@
     ];
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, nix2container }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        n2c = nix2container.packages.${system}.nix2container;
 
         # =====================================================================
         # PHP with Magento-required extensions
@@ -120,6 +123,16 @@
           redis
         ];
 
+        # =====================================================================
+        # Container root filesystem
+        # =====================================================================
+        startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
+
+        traefikConfig = pkgs.runCommand "traefik-config" {} ''
+          mkdir -p $out/etc/traefik
+          cp -r ${./docker/traefik}/* $out/etc/traefik/
+        '';
+
       in
       {
         # =====================================================================
@@ -127,79 +140,53 @@
         # =====================================================================
         packages = {
           # -------------------------------------------------------------------
-          # Layered Container Image (RECOMMENDED)
-          # Uses buildLayeredImage for optimal layer caching
-          # Each Nix store path becomes a separate layer
+          # nix2container Image (RECOMMENDED)
+          # Streams layers directly to registry - no docker daemon needed
           # -------------------------------------------------------------------
-          container = pkgs.dockerTools.buildLayeredImage {
-            name = "ogt-app";
+          container = n2c.buildImage {
+            name = "registry.fly.io/ogt-app";
             tag = "latest";
 
-            # Maximum 125 layers (Docker limit), Nix optimizes automatically
+            # Maximum layers for optimal caching
             maxLayers = 100;
 
-            contents = runtimePkgs ++ servicePkgs ++ [
-              php
-              php.packages.composer
-              exporters
+            copyToRoot = pkgs.buildEnv {
+              name = "root";
+              paths = runtimePkgs ++ servicePkgs ++ [
+                php
+                php.packages.composer
+                exporters
+                startScript
+                traefikConfig
+              ];
+              pathsToLink = [ "/bin" "/lib" "/share" "/etc" ];
+            };
+
+            perms = [
+              {
+                path = startScript;
+                regex = ".*";
+                mode = "0755";
+              }
             ];
 
-            extraCommands = ''
-              # Create required directories
-              mkdir -p var/www/html
-              mkdir -p var/lib/mysql
-              mkdir -p etc/my.cnf.d
-              mkdir -p etc/traefik
-              mkdir -p etc/php/conf.d
-              mkdir -p usr/local/bin
-              mkdir -p run
-              mkdir -p tmp
-              chmod 1777 tmp
-
-              # Copy start script and traefik config
-              cp ${./docker/start.sh} start.sh
-              chmod +x start.sh
-              cp -r ${./docker/traefik}/* etc/traefik/
-            '';
-
             config = {
-              Cmd = [ "/start.sh" ];
-              Env = [
+              entrypoint = [ "${startScript}/bin/start.sh" ];
+              env = [
                 "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
                 "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ php pkgs.openssl pkgs.icu pkgs.zlib ]}"
                 "PHP_FPM_PM=dynamic"
                 "PHP_FPM_PM_MAX_CHILDREN=50"
               ];
-              ExposedPorts."8080/tcp" = { };
-              WorkingDir = "/var/www/html";
+              exposedPorts = {
+                "8080/tcp" = {};
+              };
+              workingDir = "/var/www/html";
             };
           };
 
           # Default package
           default = self.packages.${system}.container;
-
-          # -------------------------------------------------------------------
-          # Streamable Container (for very large images)
-          # Streams layers directly without loading full image into memory
-          # -------------------------------------------------------------------
-          container-stream = pkgs.dockerTools.streamLayeredImage {
-            name = "ogt-app";
-            tag = "latest";
-            maxLayers = 100;
-            contents = runtimePkgs ++ servicePkgs ++ [
-              php
-              php.packages.composer
-              exporters
-            ];
-            config = {
-              Cmd = [ "/start.sh" ];
-              Env = [
-                "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}"
-              ];
-              ExposedPorts."8080/tcp" = { };
-              WorkingDir = "/var/www/html";
-            };
-          };
 
           # Individual components (for debugging/testing)
           inherit php exporters;

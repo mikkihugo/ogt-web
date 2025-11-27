@@ -20,24 +20,14 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Build container with Nix
+      - name: Build and push container with nix2container
         run: |
-          echo "Building layered container with Nix flake..."
-          nix build .#container --print-build-logs
-
-      - name: Push to Fly registry
-        run: |
-          echo "Loading image..."
-          docker load < result
-
-          echo "Tagging for Fly registry..."
-          docker tag ogt-app:latest registry.fly.io/ogt-app:latest
-
-          echo "Authenticating with Fly..."
+          echo "Building and pushing layered container with nix2container..."
+          # Authenticate with Fly registry
           flyctl auth docker
 
-          echo "Pushing to registry..."
-          docker push registry.fly.io/ogt-app:latest
+          # Build and stream directly to registry (no docker daemon needed!)
+          nix run .#container.copyToRegistry --print-build-logs
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
