@@ -16,13 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: flakecache/nix-installer@v1.0.2
-        continue-on-error: true
-
-      - name: Verify Nix
-        run: |
-          . "$HOME/.nix-profile/etc/profile.d/nix.sh"
-          nix --version
+      - uses: flakecache/nix-installer@main
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
