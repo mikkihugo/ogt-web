@@ -29,7 +29,6 @@ jobs:
       - name: Deploy to Fly.io
         shell: bash
         run: |
-          # Sanitize token: remove whitespace, newlines, carriage returns to fix "invalid header field value"
-          # This handles cases where the secret was copied with trailing newlines
-          export FLY_API_TOKEN=$(echo "${{ secrets.FLY_API_TOKEN }}" | tr -d '[:space:]')
+          # Sanitize token: remove leading/trailing whitespace only (preserve internal spaces for FlyV1 tokens)
+          export FLY_API_TOKEN=$(echo "${{ secrets.FLY_API_TOKEN }}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
           flyctl deploy --remote-only
