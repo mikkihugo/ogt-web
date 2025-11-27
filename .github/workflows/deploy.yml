@@ -32,8 +32,8 @@ jobs:
         id: build
         run: |
           echo "Building and pushing layered container with nix2container..."
-          # Authenticate with Fly registry
-          echo $FLY_API_TOKEN | flyctl auth docker --token-stdin
+          # Authenticate with Fly registry using access token flag
+          flyctl auth docker -t $FLY_API_TOKEN
 
           # Build and stream directly to registry (no docker daemon needed!)
           nix run .#container.copyToRegistry --print-build-logs
