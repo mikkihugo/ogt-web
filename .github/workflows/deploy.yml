@@ -11,12 +11,11 @@ jobs:
   deploy:
     name: Deploy magneto to Fly.io
     runs-on: mikkihugo-runners
+    container: nixos/nix:latest
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v3
-
-      - uses: flakecache/nix-installer@v1.0.2
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
