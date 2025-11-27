@@ -10,7 +10,7 @@ on:
 jobs:
   deploy:
     name: Deploy magneto to Fly.io
-    runs-on: self-hosted
+    runs-on: mikkihugo-runners
     permissions:
       contents: read
     steps:
