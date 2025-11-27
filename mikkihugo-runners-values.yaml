@@ -1,0 +1,94 @@
+containerMode:
+  type: dind
+controllerServiceAccount:
+  name: arc-controller
+  namespace: arc-systems
+githubConfigSecret: arc-runner-secret-mikkihugo
+githubConfigUrl: https://github.com/mikkihugo/magneto-web
+maxRunners: 5
+minRunners: 0
+template:
+  spec:
+    containers:
+    - args:
+      - |
+        exec /home/runner/run.sh
+      command:
+      - /bin/bash
+      - -c
+      env:
+      - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
+        value: "false"
+      - name: RUNNER_SUPPORTS_CONTAINERS
+        value: "true"
+      - name: FLAKECACHE_RUNNER
+        value: "true"
+      - name: NIX_REMOTE
+        value: daemon
+      - name: ATTIC_SERVER
+        value: http://attic.actions-runner-system.svc.cluster.local:8080
+      - name: ATTIC_TOKEN
+        valueFrom:
+          secretKeyRef:
+            key: token
+            name: attic-runner-token
+      image: ghcr.io/actions/actions-runner:latest
+      name: runner
+      resources:
+        limits:
+          ephemeral-storage: 10Gi
+        requests:
+          ephemeral-storage: 5Gi
+      volumeMounts:
+      - mountPath: /nix
+        name: nix-store
+        readOnly: true
+      - mountPath: /nix/var/nix/daemon-socket
+        name: nix-socket
+      - mountPath: /home/runner/_work
+        name: work
+    # Nix daemon sidecar - enforces signature policy
+    - name: nix-daemon
+      image: nixos/nix:latest
+      securityContext:
+        runAsUser: 0
+      command:
+      - /bin/sh
+      - -c
+      - |
+        # Create nix.conf with strict signature requirements
+        mkdir -p /etc/nix
+        cat > /etc/nix/nix.conf << 'EOF'
+        substituters = https://cache.nixos.org http://attic.actions-runner-system.svc.cluster.local:8080/singularity
+        trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= singularity:nsWPgp0mIC/OZdqnm0UXSOblL37jAHny6zYhqyu6ckk=
+        require-sigs = true
+        max-jobs = auto
+        keep-outputs = true
+        builders-use-substitutes = true
+        EOF
+        # Start nix-daemon
+        exec nix-daemon
+      volumeMounts:
+      - mountPath: /nix
+        name: nix-store
+      - mountPath: /nix/var/nix/daemon-socket
+        name: nix-socket
+    - image: docker:dind
+      name: dind
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /home/runner/_work
+        name: work
+      - mountPath: /var/lib/docker
+        name: dind-storage
+    volumes:
+    - name: nix-store
+      persistentVolumeClaim:
+        claimName: nix-store-pvc
+    - name: nix-socket
+      emptyDir: {}
+    - emptyDir: {}
+      name: work
+    - emptyDir: {}
+      name: dind-storage
