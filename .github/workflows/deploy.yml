@@ -14,13 +14,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy ogt-web to Fly.io
-    # Arc Runner Group Strategy (Blacksmith-like service):
-    # - Shared pool of runners with customer/capability labels
-    # - GitHub App manages dynamic provisioning and cleanup
-    # - Labels enable routing: [self-hosted, nix, linux, customer-ogt]
-    # Current: Using mikkihugo-runners group
-    # Future: Switch to explicit labels when GitHub App ready
-    runs-on: mikkihugo-runners
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write      # For attestations
