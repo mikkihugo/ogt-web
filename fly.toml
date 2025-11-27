@@ -7,7 +7,7 @@ app = 'ogt-web'
 primary_region = 'arn'
 
 [build]
-  image = 'registry.fly.io/ogt-web:latest'
+  dockerfile = 'Dockerfile'
 
 [env]
   SITE_ENV = 'production'
