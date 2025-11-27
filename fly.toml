@@ -1,11 +1,11 @@
 
-app = "ogt-app"
+app = "ogt-web"
 primary_region = "arn"
 
 [build]
   # Image built with Nix flake and pushed to Fly registry
   # See .github/workflows/deploy.yml
-  image = "registry.fly.io/ogt-app:latest"
+  image = "registry.fly.io/ogt-web:latest"
 
 [env]
   SITE_NAME = "orgasmtoy.com"

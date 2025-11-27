@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Starting ogt-app (Galera + Web + Redis)..."
+echo "Starting ogt-web (Galera + Web + Redis)..."
 
 # 0. Start Redis
 echo "Starting Redis..."

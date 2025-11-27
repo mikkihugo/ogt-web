@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy ogt-app to Fly.io
+    name: Deploy ogt-web to Fly.io
     runs-on: mikkihugo-runners
     permissions:
       contents: read
@@ -32,7 +32,7 @@ jobs:
           # Build and stream directly to registry (no docker daemon needed!)
           nix run .#container.copyToRegistry --print-build-logs
 
-          echo "Image pushed: registry.fly.io/ogt-app:latest"
+          echo "Image pushed: registry.fly.io/ogt-web:latest"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -44,14 +44,14 @@ jobs:
       - name: Attest container with GitHub
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: registry.fly.io/ogt-app
+          subject-name: registry.fly.io/ogt-web
           subject-digest: sha256:${{ hashFiles('result') }}
           push-to-registry: false
 
       - name: Attest SBOM with GitHub
         uses: actions/attest-sbom@v2
         with:
-          subject-name: registry.fly.io/ogt-app
+          subject-name: registry.fly.io/ogt-web
           subject-digest: sha256:${{ hashFiles('result') }}
           sbom-path: sbom-nix.json
 

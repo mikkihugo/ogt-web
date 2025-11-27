@@ -1,5 +1,5 @@
 # =============================================================================
-# FlakeCache ogt-app - Nix Flake Configuration
+# FlakeCache ogt-web - Nix Flake Configuration
 # =============================================================================
 #
 # ARCHITECTURE:
@@ -144,7 +144,7 @@
           # Streams layers directly to registry - no docker daemon needed
           # -------------------------------------------------------------------
           container = n2c.buildImage {
-            name = "registry.fly.io/ogt-app";
+            name = "registry.fly.io/ogt-web";
             tag = "latest";
 
             # Maximum layers for optimal caching
@@ -234,7 +234,7 @@
               nix build .#container
               echo "Loading to Docker..."
               docker load < result
-              echo "Done! Image: ogt-app:latest"
+              echo "Done! Image: ogt-web:latest"
             '');
           };
         };

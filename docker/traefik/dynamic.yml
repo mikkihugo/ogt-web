@@ -1,12 +1,12 @@
 http:
   routers:
-    ogt-app:
+    ogt-web:
       rule: "PathPrefix(`/`)"
-      service: ogt-app
+      service: ogt-web
       entryPoints:
         - web
   services:
-    ogt-app:
+    ogt-web:
       loadBalancer:
         servers:
           - url: "http://127.0.0.1:9000"
