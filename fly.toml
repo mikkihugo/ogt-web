@@ -1,4 +1,5 @@
-app = "magneto-orgasmtoy"
+
+app = "ogt-app"
 primary_region = "arn"
 
 [build]
@@ -31,3 +32,19 @@ primary_region = "arn"
   cpu_kind = "shared"
   cpus = 2
   memory_mb = 2048
+
+[[metrics]]
+  port = 9104
+  path = "/metrics"
+
+[[metrics]]
+  port = 9121
+  path = "/metrics"
+
+[[metrics]]
+  port = 9253
+  path = "/metrics"
+
+[[metrics]]
+  port = 8081
+  path = "/metrics"

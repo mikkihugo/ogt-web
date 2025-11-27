@@ -1,7 +1,11 @@
 #!/bin/bash
 set -e
 
-echo "Starting Magento All-in-One (Galera + Web)..."
+echo "Starting Magento All-in-One (Galera + Web + Redis)..."
+
+# 0. Start Redis
+echo "Starting Redis..."
+redis-server --daemonize yes --port 6379 --loglevel warning
 
 # 1. Initialize MariaDB Data Directory
 if [ ! -d "/var/lib/mysql/mysql" ]; then
@@ -72,7 +76,16 @@ sleep 5
 mysql -e "CREATE DATABASE IF NOT EXISTS magento;"
 mysql -e "CREATE USER IF NOT EXISTS 'magento'@'localhost' IDENTIFIED BY 'magento';"
 mysql -e "GRANT ALL PRIVILEGES ON magento.* TO 'magento'@'localhost';"
+mysql -e "CREATE USER IF NOT EXISTS 'exporter'@'localhost' IDENTIFIED BY 'exporterpass' WITH MAX_USER_CONNECTIONS 3;"
+mysql -e "GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
+
+# Create MySQL config for exporter
+cat > /etc/.mysqld_exporter.cnf <<EOF
+[client]
+user=exporter
+password=exporterpass
+EOF
 
 if [ ! -f "/var/www/html/app/etc/env.php" ]; then
     echo "Installing Magento..."
@@ -87,7 +100,12 @@ if [ ! -f "/var/www/html/app/etc/env.php" ]; then
         --admin-email=${ADMIN_EMAIL:-admin@example.com} \
         --admin-user=${ADMIN_USER:-admin} \
         --admin-password=${ADMIN_PASSWORD:-Admin123!} \
-        --session-save=db \
+        --session-save=redis \
+        --session-save-redis-host=localhost \
+        --session-save-redis-port=6379 \
+        --cache-backend=redis \
+        --cache-backend-redis-server=localhost \
+        --cache-backend-redis-port=6379 \
         --language=en_US --currency=USD --timezone=UTC --use-rewrites=1
 fi
 
@@ -95,3 +113,9 @@ fi
 echo "Starting PHP-FPM and Nginx..."
 php-fpm -D
 nginx -g "daemon off;"
+
+# 6. Start Prometheus Exporters for Telemetry
+echo "Starting Prometheus exporters..."
+/usr/local/bin/mysqld_exporter --config.my-cnf /etc/.mysqld_exporter.cnf --web.listen-address=":9104" &
+/usr/local/bin/redis_exporter --redis.addr localhost:6379 --web.listen-address=":9121" &
+/usr/local/bin/php-fpm_exporter --phpfpm.scrape-uri http://localhost:9000/status -web.listen-address=":9253" &

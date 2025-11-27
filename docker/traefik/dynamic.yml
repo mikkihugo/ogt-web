@@ -1,0 +1,12 @@
+http:
+  routers:
+    magento:
+      rule: "PathPrefix(`/`)"
+      service: magento
+      entryPoints:
+        - web
+  services:
+    magento:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:9000"

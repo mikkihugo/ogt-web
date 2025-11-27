@@ -1,15 +1,14 @@
 # Multi-stage Dockerfile for Magento 2 on Fly.io
-FROM php:8.1-fpm-alpine AS base
+FROM php:8.3-fpm-alpine AS base
 
 # Install system dependencies
 RUN apk add --no-cache \
     bash \
     curl \
     freetype-dev \
-    git \
-    icu-dev \
     libjpeg-turbo-dev \
     libpng-dev \
+    icu-dev \
     libxml2-dev \
     libxslt-dev \
     libzip-dev \
@@ -19,17 +18,17 @@ RUN apk add --no-cache \
     socat \
     bind-tools \
     procps \
+    mariadb-client \
     unzip \
     zip \
-    mariadb \
-    mariadb-client \
-    mariadb-ctl \
-    galera
+    wget \
+    redis
 
 # Install PHP extensions required by Magento
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     bcmath \
+    ftp \
     gd \
     intl \
     mbstring \
@@ -37,7 +36,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     soap \
     xsl \
     zip \
-    sockets
+    && pecl install redis && docker-php-ext-enable redis
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -45,19 +44,19 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Install Nginx
-RUN apk add --no-cache nginx
+# Install Traefik
+RUN wget -O /usr/local/bin/traefik https://github.com/traefik/traefik/releases/download/v3.0.0/traefik_v3.0.0_linux_amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/ traefik && \
+    chmod +x /usr/local/bin/traefik
 
-# Copy Nginx configuration
-COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+# Copy Traefik configuration
+COPY docker/traefik/ /etc/traefik/
 
 # Copy PHP-FPM configuration
-RUN echo "clear_env = no" >> /usr/local/etc/php-fpm.d/www.conf
-
-# Create nginx user
-RUN adduser -D -u 1000 -g 'www' www \
-    && mkdir -p /var/www/html \
-    && chown -R www:www /var/www/html
+RUN echo "clear_env = no" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "pm.status_path = /status" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "access.log = /dev/stdout" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "error_log = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "listen = 127.0.0.1:9000" >> /usr/local/etc/php-fpm.d/www.conf
 
 FROM base AS build
 
@@ -90,24 +89,22 @@ RUN mkdir -p app/code/Klarna/Checkout \
 RUN mkdir -p app/code/Stripe/Checkout \
     && cp -r /tmp/magento-theme/Stripe_Checkout/* app/code/Stripe/Checkout/
 
-# Copy static frontend site (optional, maybe as a subfolder or replacement?)
-# User asked for "opensource" (Magento), so we prioritize Magento.
-# We can put momento2-site in pub/momento2 for reference/access
-COPY momento2-site /var/www/html/magento2/pub/momento2
-
 # Set proper permissions
-RUN chown -R www:www /var/www/html/magento2
+RUN chown -R www-data:www-data /var/www/html/magento2
 
 FROM base AS final
 
 # Copy built site from build stage
-COPY --from=build --chown=www:www /var/www/html/magento2 /var/www/html
+COPY --from=build --chown=www-data:www-data /var/www/html/magento2 /var/www/html
+
+# Install Prometheus exporters
+RUN wget -qO- https://github.com/hipages/php-fpm_exporter/releases/download/v1.2.0/php-fpm_exporter_1.2.0_linux_amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/ php-fpm_exporter && \
+    wget -qO- https://github.com/prometheus/mysqld_exporter/releases/download/v0.15.1/mysqld_exporter-0.15.1.linux-amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/ mysqld_exporter && \
+    wget -qO- https://github.com/oliver006/redis_exporter/releases/download/v1.54.0/redis_exporter-v1.54.0.linux-amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/ redis_exporter && \
+    chmod +x /usr/local/bin/php-fpm_exporter /usr/local/bin/mysqld_exporter /usr/local/bin/redis_exporter
 
 # Expose port 8080 (Fly.io standard)
 EXPOSE 8080
-
-# Update Nginx to listen on 8080
-RUN sed -i 's/listen 80/listen 8080/g' /etc/nginx/http.d/default.conf
 
 # Copy Galera configuration
 COPY docker/mariadb/galera.cnf /etc/my.cnf.d/galera.cnf

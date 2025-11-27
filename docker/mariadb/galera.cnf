@@ -15,4 +15,7 @@ wsrep_cluster_name="magneto_cluster"
 # Galera Synchronization Configuration
 wsrep_sst_method=rsync
 
+# Log to stderr for Fly.io telemetry
+log_error = /dev/stderr
+
 # Node address will be set at runtime

@@ -13,7 +13,7 @@
       in
       {
         packages.default = pkgs.dockerTools.buildImage {
-          name = "magneto-orgasmtoy";
+          name = "ogt-app";
           tag = "latest";
           fromImage = null;
           
