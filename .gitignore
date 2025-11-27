@@ -38,6 +38,7 @@ build/
 tmp/
 temp/
 .cache/
+.direnv/
 
 # Fly.io
 .fly/
