@@ -30,6 +30,9 @@ jobs:
 
       - name: Build and push container with nix2container
         run: |
+          # Authenticate with Fly registry
+          flyctl auth docker -t $FLY_API_TOKEN
+          
           # Build and push to Fly registry
           nix run .#container.copyToRegistry --print-build-logs
         env:
