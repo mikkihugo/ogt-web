@@ -87,6 +87,7 @@ if [ ! -f "/var/www/html/app/etc/env.php" ]; then
         --admin-email=${ADMIN_EMAIL:-admin@example.com} \
         --admin-user=${ADMIN_USER:-admin} \
         --admin-password=${ADMIN_PASSWORD:-Admin123!} \
+        --session-save=db \
         --language=en_US --currency=USD --timezone=UTC --use-rewrites=1
 fi
 
