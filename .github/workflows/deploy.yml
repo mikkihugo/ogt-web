@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy magneto to Fly.io
+    name: Deploy ogt-app to Fly.io
     runs-on: mikkihugo-runners
     permissions:
       contents: read

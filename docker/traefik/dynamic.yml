@@ -1,12 +1,12 @@
 http:
   routers:
-    magento:
+    ogt-app:
       rule: "PathPrefix(`/`)"
-      service: magento
+      service: ogt-app
       entryPoints:
         - web
   services:
-    magento:
+    ogt-app:
       loadBalancer:
         servers:
           - url: "http://127.0.0.1:9000"
