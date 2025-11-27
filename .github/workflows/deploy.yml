@@ -35,15 +35,20 @@ jobs:
           
           # Create OCI registry credentials for nix2container
           mkdir -p ~/.config/containers
-          AUTH_TOKEN=$(echo -n "x:${FLY_API_TOKEN}" | base64)
-          printf '{"auths": {"registry.fly.io": {"auth": "%s"}}}' "${AUTH_TOKEN}" > ~/.config/containers/auth.json
+          python3 << 'PYTHON'
+          import base64
+          import json
+          import os
+          token = base64.b64encode(b'x:${{ secrets.FLY_API_TOKEN }}').decode()
+          auth = {"auths": {"registry.fly.io": {"auth": token}}}
+          with open(os.path.expanduser("~/.config/containers/auth.json"), "w") as f:
+              json.dump(auth, f)
+          PYTHON
           
           # Build and stream directly to registry (nix2container uses OCI creds, not docker)
           nix run .#container.copyToRegistry --print-build-logs
           
           echo "Image pushed: registry.fly.io/ogt-web:latest"
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Generate SBOM
         run: |
