@@ -53,7 +53,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Install Traefik
-RUN wget -O /usr/local/bin/traefik https://github.com/traefik/traefik/releases/download/v3.0.0/traefik_v3.0.0_linux_amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/ traefik && \
+RUN wget -qO- https://github.com/traefik/traefik/releases/download/v3.0.0/traefik_v3.0.0_linux_amd64.tar.gz | tar -xz -C /usr/local/bin/ traefik && \
     chmod +x /usr/local/bin/traefik
 
 # Copy Traefik configuration
