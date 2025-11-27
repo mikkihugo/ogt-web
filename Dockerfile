@@ -108,10 +108,14 @@ FROM base AS final
 COPY --from=build --chown=www-data:www-data /var/www/html/magento2 /var/www/html
 
 # Install Prometheus exporters
-RUN wget -qO- https://github.com/hipages/php-fpm_exporter/releases/download/v1.2.0/php-fpm_exporter_1.2.0_linux_amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/ php-fpm_exporter && \
-    wget -qO- https://github.com/prometheus/mysqld_exporter/releases/download/v0.15.1/mysqld_exporter-0.15.1.linux-amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/ mysqld_exporter && \
-    wget -qO- https://github.com/oliver006/redis_exporter/releases/download/v1.54.0/redis_exporter-v1.54.0.linux-amd64.tar.gz | tar -xz --strip-components=1 -C /usr/local/bin/ redis_exporter && \
-    chmod +x /usr/local/bin/php-fpm_exporter /usr/local/bin/mysqld_exporter /usr/local/bin/redis_exporter
+RUN wget -qO /tmp/php-fpm_exporter.tar.gz https://github.com/hipages/php-fpm_exporter/releases/download/v1.2.0/php-fpm_exporter_1.2.0_linux_amd64.tar.gz && \
+    tar -xzf /tmp/php-fpm_exporter.tar.gz -C /usr/local/bin/ php-fpm_exporter && \
+    wget -qO /tmp/mysqld_exporter.tar.gz https://github.com/prometheus/mysqld_exporter/releases/download/v0.15.1/mysqld_exporter-0.15.1.linux-amd64.tar.gz && \
+    tar -xzf /tmp/mysqld_exporter.tar.gz --strip-components=1 -C /usr/local/bin/ && \
+    wget -qO /tmp/redis_exporter.tar.gz https://github.com/oliver006/redis_exporter/releases/download/v1.54.0/redis_exporter-v1.54.0.linux-amd64.tar.gz && \
+    tar -xzf /tmp/redis_exporter.tar.gz --strip-components=1 -C /usr/local/bin/ && \
+    chmod +x /usr/local/bin/php-fpm_exporter /usr/local/bin/mysqld_exporter /usr/local/bin/redis_exporter && \
+    rm -f /tmp/*.tar.gz
 
 # Expose port 8080 (Fly.io standard)
 EXPOSE 8080
