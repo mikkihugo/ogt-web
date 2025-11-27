@@ -24,6 +24,13 @@ RUN apk add --no-cache \
     wget \
     redis
 
+# Install build dependencies for PHP extensions
+RUN apk add --no-cache --virtual .build-deps \
+    autoconf \
+    gcc \
+    g++ \
+    make
+
 # Install PHP extensions required by Magento
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
@@ -36,7 +43,8 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     soap \
     xsl \
     zip \
-    && pecl install redis && docker-php-ext-enable redis
+    && pecl install redis && docker-php-ext-enable redis \
+    && apk del .build-deps
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
