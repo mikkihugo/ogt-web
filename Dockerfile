@@ -107,18 +107,17 @@ FROM base AS final
 # Copy built site from build stage
 COPY --from=build --chown=www-data:www-data /var/www/html/magento2 /var/www/html
 
-# Install Prometheus exporters using curl with better error handling
-RUN apk add --no-cache ca-certificates && \
-    curl -fsSL -o /tmp/php-fpm_exporter.tar.gz \
-      https://github.com/hipages/php-fpm_exporter/releases/download/v1.2.0/php-fpm_exporter_1.2.0_linux_amd64.tar.gz && \
+# Install Prometheus exporters with correct versions
+RUN curl -fsSL -o /tmp/php-fpm_exporter.tar.gz \
+      https://github.com/hipages/php-fpm_exporter/releases/download/v2.2.0/php-fpm_exporter_2.2.0_linux_amd64.tar.gz && \
     tar -xzf /tmp/php-fpm_exporter.tar.gz -C /usr/local/bin/ php-fpm_exporter && \
     curl -fsSL -o /tmp/mysqld_exporter.tar.gz \
       https://github.com/prometheus/mysqld_exporter/releases/download/v0.15.1/mysqld_exporter-0.15.1.linux-amd64.tar.gz && \
-    tar -xzf /tmp/mysqld_exporter.tar.gz --strip-components=1 -C /usr/local/bin/ && \
+    tar -xzf /tmp/mysqld_exporter.tar.gz --strip-components=1 -C /usr/local/bin/ mysqld_exporter-0.15.1.linux-amd64/mysqld_exporter && \
     curl -fsSL -o /tmp/redis_exporter.tar.gz \
       https://github.com/oliver006/redis_exporter/releases/download/v1.54.0/redis_exporter-v1.54.0.linux-amd64.tar.gz && \
-    tar -xzf /tmp/redis_exporter.tar.gz --strip-components=1 -C /usr/local/bin/ && \
-    chmod +x /usr/local/bin/php-fpm_exporter /usr/local/bin/mysqld_exporter /usr/local/bin/redis_exporter && \
+    tar -xzf /tmp/redis_exporter.tar.gz --strip-components=1 -C /usr/local/bin/ redis_exporter-v1.54.0.linux-amd64/redis_exporter && \
+    chmod +x /usr/local/bin/*_exporter && \
     rm -f /tmp/*.tar.gz
 
 # Expose port 8080 (Fly.io standard)
