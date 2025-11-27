@@ -10,7 +10,7 @@ on:
 jobs:
   deploy:
     name: Deploy ogt-web to Fly.io
-    runs-on: mikkihugo-runners
+    runs-on: ubuntu-latest-flakecache
     permissions:
       contents: read
       id-token: write      # For attestations
