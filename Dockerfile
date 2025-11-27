@@ -29,7 +29,8 @@ RUN apk add --no-cache --virtual .build-deps \
     autoconf \
     gcc \
     g++ \
-    make
+    make \
+    linux-headers
 
 # Install PHP extensions required by Magento
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
