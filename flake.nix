@@ -1,10 +1,10 @@
 # =============================================================================
-# FlakeCache Magneto-Web - Nix Flake Configuration
+# FlakeCache ogt-app - Nix Flake Configuration
 # =============================================================================
 #
 # ARCHITECTURE:
-# This flake builds a LAYERED container image using dockerTools.buildLayeredImage
-# which provides optimal layer caching - only changed layers need to rebuild.
+# This flake builds a LAYERED container image using nix2container
+# which streams layers directly to registry - no docker daemon needed.
 #
 # LAYER STRUCTURE:
 # 1. Base layer: busybox, coreutils (rarely changes)
@@ -18,9 +18,9 @@
 # - Builds are reproducible and content-addressed
 #
 # USAGE:
-#   nix build .#container        # Build layered container
-#   nix build .#container-stream # Build streamable container (for large images)
-#   nix develop                  # Enter development shell
+#   nix run .#container.copyToRegistry  # Build and push to registry
+#   nix build .#container               # Build container (for local testing)
+#   nix develop                         # Enter development shell
 #
 # =============================================================================
 {
