@@ -29,7 +29,11 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Fly.io
-        run: flyctl deploy
+        run: |
+          # Write token to a file to avoid shell expansion issues
+          echo "$FLY_API_TOKEN" > /tmp/flytoken
+          flyctl auth login --token-file /tmp/flytoken
+          flyctl deploy
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           LANG: C.UTF-8
