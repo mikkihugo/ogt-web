@@ -182,7 +182,7 @@
             ];
 
             config = {
-              entrypoint = [ "${startScript}/bin/start.sh" ];
+              entrypoint = [ "/bin/start.sh" ];
               env = [
                 "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
                 "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ php pkgs.openssl pkgs.icu pkgs.zlib ]}"
