@@ -8,6 +8,7 @@ primary_region = 'arn'
 
 [env]
   SITE_ENV = 'production'
+  ENABLE_GALERA = 'false'
   SITE_NAME = 'orgasmtoy.com'
 
 [[mounts]]

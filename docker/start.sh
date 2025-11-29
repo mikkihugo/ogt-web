@@ -7,7 +7,21 @@ echo "Starting ogt-web (hyperconverged: MariaDB + Redis + PHP-FPM + Caddy)..."
 echo "Starting Redis..."
 redis-server --daemonize yes --port 6379 --loglevel warning
 
-# 1. Initialize MariaDB (unix socket only, no network exposure)
+# 1. Network & Cluster Discovery (Fly.io DNS)
+# Even if Galera is disabled, we check DNS to ensure the environment is healthy
+echo "Discovery: Checking Fly.io internal DNS..."
+if [ -n "${FLY_APP_NAME:-}" ]; then
+    MY_IP=$(hostname -i || echo "unknown")
+    PEERS=$(dig +short AAAA "${FLY_APP_NAME}.internal" || echo "")
+    PEER_COUNT=$(echo "$PEERS" | wc -w)
+    echo "  > My IP: $MY_IP"
+    echo "  > Peers found ($PEER_COUNT):" 
+    echo "$PEERS" | sed 's/^/    - /'
+else
+    echo "  > Not running on Fly.io (FLY_APP_NAME unset)."
+fi
+
+# 2. Initialize MariaDB
 if [ ! -d "/var/lib/mysql/mysql" ]; then
   echo "Initializing MariaDB data directory..."
   mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null
@@ -16,14 +30,33 @@ fi
 mkdir -p /run/mysqld
 chown -R mysql:mysql /run/mysqld
 
+# Configuration: Prepare for future Clustering
+# To enable Galera: set ENABLE_GALERA=true in fly.toml
+ENABLE_GALERA=${ENABLE_GALERA:-false}
+
+if [ "$ENABLE_GALERA" = "true" ]; then
+    echo "Configuring MariaDB for Galera Cluster..."
+    WSREP_ON="ON"
+    SKIP_NETWORKING="OFF"
+    BIND_ADDRESS="::"
+    WSREP_PROVIDER="/usr/lib/libgalera_smm.so" # Path varies by distro
+    # TODO: Add cluster address generation logic here
+else
+    echo "Configuring MariaDB as Standalone (Galera Disabled)..."
+    WSREP_ON="OFF"
+    SKIP_NETWORKING="ON"
+    BIND_ADDRESS="127.0.0.1"
+    WSREP_PROVIDER="none"
+fi
+
 cat > /etc/my.cnf.d/runtime.cnf <<EOF
 [mysqld]
-skip-networking=ON
+skip-networking=${SKIP_NETWORKING}
 socket=/run/mysqld/mysqld.sock
-bind-address=127.0.0.1
+bind-address=${BIND_ADDRESS}
 log_error=/dev/stderr
-wsrep_on=OFF
-wsrep_provider=none
+wsrep_on=${WSREP_ON}
+wsrep_provider=${WSREP_PROVIDER}
 EOF
 
 echo "Starting MariaDB..."
