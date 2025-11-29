@@ -165,16 +165,12 @@ if [ ! -f "/var/www/html/app/etc/env.php" ]; then
     --language=en_US --currency=USD --timezone=UTC --use-rewrites=1
 fi
 
-# 3. Telemetry exporters
-echo "Starting Prometheus exporters..."
-mysqld_exporter --config.my-cnf /etc/.mysqld_exporter.cnf --web.listen-address=":9104" &
-redis_exporter --redis.addr localhost:6379 --web.listen-address=":9121" &
-php-fpm_exporter server --phpfpm.scrape-uri unix:///run/php-fpm.sock --web.listen-address=":9253" &
+# 3. Stop bootstrap services
+echo "Stopping bootstrap services..."
+mysqladmin --socket=/run/mysqld/mysqld.sock shutdown
+redis-cli shutdown
 
-# 4. Web tier: PHP-FPM + Caddy (FastCGI)
-echo "Starting PHP-FPM..."
+# 4. Handover to Supervisor
+echo "Starting Supervisor..."
 mkdir -p /run/php-fpm
-php-fpm -D
-
-echo "Starting Caddy..."
-exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+exec supervisord -c /etc/supervisord.conf

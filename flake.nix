@@ -113,6 +113,7 @@
           unzip
           zip
           mariadb  # Full MariaDB server (includes mysql_install_db, mysqld_safe)
+          python3Packages.supervisor
         ];
 
         # =====================================================================
@@ -159,6 +160,7 @@
                 exporters
                 startScript
                 caddyConfig
+                (pkgs.writeTextDir "etc/supervisord.conf" (builtins.readFile ./docker/supervisord.conf))
                 (pkgs.runCommand "magento-theme" {} ''
                   mkdir -p $out/tmp/magento-theme
                   cp -r ${./magento-theme}/* $out/tmp/magento-theme/
