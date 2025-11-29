@@ -130,16 +130,29 @@
         # =====================================================================
         # Container root filesystem
         # =====================================================================
+        # writeShellScriptBin creates a derivation with the script at $out/bin/start.sh
         startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
 
-        # buildEnv automatically symlinks /bin from all paths
+        # buildEnv creates a unified filesystem by symlinking paths together.
+        # This follows the official nix2container pattern (see examples/bash.nix).
+        #
+        # When we want tools in /, we use symlinks to avoid duplicating files
+        # between / and /nix/store. This preserves library dependencies while
+        # providing executables at standard paths like /bin.
+        #
+        # pathsToLink = ["/bin"] tells buildEnv to symlink ALL /bin directories
+        # from the input paths into a single /bin in the output derivation.
+        # So startScript's /bin/start.sh becomes accessible at /bin/start.sh
+        # in the container root.
+        #
+        # Reference: https://github.com/nlewo/nix2container/blob/master/examples/bash.nix
         rootWithEntrypoint = pkgs.buildEnv {
           name = "root";
           paths = runtimePkgs ++ servicePkgs ++ [
             php
             php.packages.composer
             exporters
-            startScript
+            startScript  # Provides /bin/start.sh
             caddyConfig
             supervisordConfig
             magentoTheme
@@ -178,22 +191,34 @@
           # nix2container Image (RECOMMENDED)
           # Streams layers directly to registry - no docker daemon needed
           # -------------------------------------------------------------------
+          # IMPORTANT: nix2container config follows the OCI image spec exactly.
+          # Field names MUST be capitalized (Cmd, Env, ExposedPorts, WorkingDir).
+          # Do NOT use lowercase (cmd, env) or Docker-style (entrypoint) - these will fail.
+          #
+          # Use Cmd (not entrypoint) for the container command. Both set the default
+          # command, but nix2container uses OCI spec naming.
+          #
+          # Reference: https://github.com/nlewo/nix2container/blob/master/examples/nginx.nix
           container = n2c.buildImage {
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
             copyToRoot = rootWithEntrypoint;
             config = {
+              # Default command - executes /bin/start.sh from rootWithEntrypoint
               Cmd = [ "/bin/start.sh" ];
+              # Environment variables (OCI spec capitalization)
               Env = [
                 "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
                 "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ php pkgs.openssl pkgs.icu pkgs.zlib ]}"
                 "PHP_FPM_PM=dynamic"
                 "PHP_FPM_PM_MAX_CHILDREN=50"
               ];
+              # Exposed ports (OCI spec capitalization)
               ExposedPorts = {
                 "8080/tcp" = {};
               };
+              # Working directory (OCI spec capitalization)
               WorkingDir = "/var/www/html";
             };
           };
