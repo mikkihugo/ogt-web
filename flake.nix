@@ -147,6 +147,7 @@
             caddyConfig
             supervisordConfig
             magentoTheme
+            startScript  # Include startScript here so /bin/start.sh is merged properly
           ];
           pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
         };
@@ -242,7 +243,7 @@
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
-            copyToRoot = [ startScript rootEnv magentoCore ];
+            copyToRoot = [ rootEnv magentoCore ];
             config = {
               # Default command - executes /bin/start.sh from rootWithEntrypoint
               Cmd = [ "/bin/start.sh" ];
