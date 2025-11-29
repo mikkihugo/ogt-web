@@ -51,13 +51,16 @@
   outputs = { self, nixpkgs, flake-utils, nix2container }:
     flake-utils.lib.eachDefaultSystem (system:
       let
+        # Use x86_64-linux for the container (Fly.io requires AMD64)
+        containerSystem = "x86_64-linux";
         pkgs = nixpkgs.legacyPackages.${system};
-        n2c = nix2container.packages.${system}.nix2container;
+        containerPkgs = nixpkgs.legacyPackages.${containerSystem};
+        n2c = nix2container.packages.${containerSystem}.nix2container;
 
         # =====================================================================
-        # PHP with Magento-required extensions
+        # PHP with Magento-required extensions (for container - x86_64)
         # =====================================================================
-        php = pkgs.php83.buildEnv {
+        php = containerPkgs.php83.buildEnv {
           extensions = { enabled, all }: enabled ++ (with all; [
             bcmath
             gd
@@ -85,19 +88,19 @@
         # Prometheus Exporters - installed via Nix (no manual downloads!)
         # This replaces the fragile curl/wget downloads in the Dockerfile
         # =====================================================================
-        exporters = pkgs.symlinkJoin {
+        exporters = containerPkgs.symlinkJoin {
           name = "prometheus-exporters";
           paths = [
-            pkgs.prometheus-php-fpm-exporter
-            pkgs.prometheus-mysqld-exporter
-            pkgs.prometheus-redis-exporter
+            containerPkgs.prometheus-php-fpm-exporter
+            containerPkgs.prometheus-mysqld-exporter
+            containerPkgs.prometheus-redis-exporter
           ];
         };
 
         # =====================================================================
-        # Runtime dependencies
+        # Runtime dependencies (for container - x86_64)
         # =====================================================================
-        runtimePkgs = with pkgs; [
+        runtimePkgs = with containerPkgs; [
           busybox
           coreutils
           bash
@@ -117,21 +120,28 @@
         ];
 
         # =====================================================================
-        # Service binaries
+        # Service binaries (for container - x86_64)
         # =====================================================================
-        servicePkgs = with pkgs; [
+        servicePkgs = with containerPkgs; [
           caddy
           redis
         ];
 
         # =====================================================================
-        # Container root filesystem
+        # Container root filesystem (for container - x86_64)
         # =====================================================================
-        startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
+        startScript = containerPkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
 
-        caddyConfig = pkgs.runCommand "caddy-config" {} ''
+        caddyConfig = containerPkgs.runCommand "caddy-config" {} ''
           mkdir -p $out/etc/caddy
           cp -r ${./docker/caddy}/* $out/etc/caddy/
+        '';
+
+        supervisordConfig = containerPkgs.writeTextDir "etc/supervisord.conf" (builtins.readFile ./docker/supervisord.conf);
+
+        magentoTheme = containerPkgs.runCommand "magento-theme" {} ''
+          mkdir -p $out/tmp/magento-theme
+          cp -r ${./magento-theme}/* $out/tmp/magento-theme/
         '';
 
       in
@@ -152,7 +162,7 @@
             # Maximum layers for optimal caching
             maxLayers = 100;
 
-            copyToRoot = pkgs.buildEnv {
+            copyToRoot = containerPkgs.buildEnv {
               name = "root";
               paths = runtimePkgs ++ servicePkgs ++ [
                 php
@@ -160,11 +170,8 @@
                 exporters
                 startScript
                 caddyConfig
-                (pkgs.writeTextDir "etc/supervisord.conf" (builtins.readFile ./docker/supervisord.conf))
-                (pkgs.runCommand "magento-theme" {} ''
-                  mkdir -p $out/tmp/magento-theme
-                  cp -r ${./magento-theme}/* $out/tmp/magento-theme/
-                '')
+                supervisordConfig
+                magentoTheme
               ];
               pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
             };
@@ -180,8 +187,8 @@
             config = {
               entrypoint = [ "${startScript}/bin/start.sh" ];
               env = [
-                "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-                "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ php pkgs.openssl pkgs.icu pkgs.zlib ]}"
+                "PATH=${containerPkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+                "LD_LIBRARY_PATH=${containerPkgs.lib.makeLibraryPath [ php containerPkgs.openssl containerPkgs.icu containerPkgs.zlib ]}"
                 "PHP_FPM_PM=dynamic"
                 "PHP_FPM_PM_MAX_CHILDREN=50"
               ];
