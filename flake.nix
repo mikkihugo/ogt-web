@@ -141,6 +141,14 @@
           cp -r ${./magento-theme}/* $out/tmp/magento-theme/
         '';
 
+        # Ensure /bin/start.sh is present by explicitly symlinking it
+        startScriptSymlink = pkgs.runCommand "startScriptSymlink" {
+          buildInputs = [ startScript ];
+        } ''
+          mkdir -p $out/bin
+          ln -s ${startScript}/bin/start.sh $out/bin/start.sh
+        '';
+
       in
       {
         # =====================================================================
@@ -153,34 +161,28 @@
           # -------------------------------------------------------------------
           container = n2c.buildImage {
             name = "registry.fly.io/ogt-web";
-            # Use git commit SHA for version tag (no "latest")
             tag = builtins.substring 0 8 (self.rev or "dev");
-
-            # Maximum layers for optimal caching
             maxLayers = 100;
-
             copyToRoot = pkgs.buildEnv {
               name = "root";
               paths = runtimePkgs ++ servicePkgs ++ [
                 php
                 php.packages.composer
                 exporters
-                startScript
+                startScriptSymlink
                 caddyConfig
                 supervisordConfig
                 magentoTheme
               ];
               pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
             };
-
             perms = [
               {
-                path = startScript;
+                path = startScriptSymlink;
                 regex = ".*";
                 mode = "0755";
               }
             ];
-
             config = {
               entrypoint = [ "/bin/start.sh" ];
               env = [
