@@ -23,6 +23,7 @@ socket=/run/mysqld/mysqld.sock
 bind-address=127.0.0.1
 log_error=/dev/stderr
 wsrep_on=OFF
+wsrep_provider=none
 EOF
 
 echo "Starting MariaDB..."
