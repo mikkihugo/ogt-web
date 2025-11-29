@@ -51,16 +51,13 @@
   outputs = { self, nixpkgs, flake-utils, nix2container }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        # Use x86_64-linux for the container (Fly.io requires AMD64)
-        containerSystem = "x86_64-linux";
         pkgs = nixpkgs.legacyPackages.${system};
-        containerPkgs = nixpkgs.legacyPackages.${containerSystem};
-        n2c = nix2container.packages.${containerSystem}.nix2container;
+        n2c = nix2container.packages.${system}.nix2container;
 
         # =====================================================================
-        # PHP with Magento-required extensions (for container - x86_64)
+        # PHP with Magento-required extensions
         # =====================================================================
-        php = containerPkgs.php83.buildEnv {
+        php = pkgs.php83.buildEnv {
           extensions = { enabled, all }: enabled ++ (with all; [
             bcmath
             gd
@@ -88,19 +85,19 @@
         # Prometheus Exporters - installed via Nix (no manual downloads!)
         # This replaces the fragile curl/wget downloads in the Dockerfile
         # =====================================================================
-        exporters = containerPkgs.symlinkJoin {
+        exporters = pkgs.symlinkJoin {
           name = "prometheus-exporters";
           paths = [
-            containerPkgs.prometheus-php-fpm-exporter
-            containerPkgs.prometheus-mysqld-exporter
-            containerPkgs.prometheus-redis-exporter
+            pkgs.prometheus-php-fpm-exporter
+            pkgs.prometheus-mysqld-exporter
+            pkgs.prometheus-redis-exporter
           ];
         };
 
         # =====================================================================
-        # Runtime dependencies (for container - x86_64)
+        # Runtime dependencies
         # =====================================================================
-        runtimePkgs = with containerPkgs; [
+        runtimePkgs = with pkgs; [
           busybox
           coreutils
           bash
@@ -120,26 +117,26 @@
         ];
 
         # =====================================================================
-        # Service binaries (for container - x86_64)
+        # Service binaries
         # =====================================================================
-        servicePkgs = with containerPkgs; [
+        servicePkgs = with pkgs; [
           caddy
           redis
         ];
 
         # =====================================================================
-        # Container root filesystem (for container - x86_64)
+        # Container root filesystem
         # =====================================================================
-        startScript = containerPkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
+        startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
 
-        caddyConfig = containerPkgs.runCommand "caddy-config" {} ''
+        caddyConfig = pkgs.runCommand "caddy-config" {} ''
           mkdir -p $out/etc/caddy
           cp -r ${./docker/caddy}/* $out/etc/caddy/
         '';
 
-        supervisordConfig = containerPkgs.writeTextDir "etc/supervisord.conf" (builtins.readFile ./docker/supervisord.conf);
+        supervisordConfig = pkgs.writeTextDir "etc/supervisord.conf" (builtins.readFile ./docker/supervisord.conf);
 
-        magentoTheme = containerPkgs.runCommand "magento-theme" {} ''
+        magentoTheme = pkgs.runCommand "magento-theme" {} ''
           mkdir -p $out/tmp/magento-theme
           cp -r ${./magento-theme}/* $out/tmp/magento-theme/
         '';
@@ -162,7 +159,7 @@
             # Maximum layers for optimal caching
             maxLayers = 100;
 
-            copyToRoot = containerPkgs.buildEnv {
+            copyToRoot = pkgs.buildEnv {
               name = "root";
               paths = runtimePkgs ++ servicePkgs ++ [
                 php
@@ -187,8 +184,8 @@
             config = {
               entrypoint = [ "${startScript}/bin/start.sh" ];
               env = [
-                "PATH=${containerPkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-                "LD_LIBRARY_PATH=${containerPkgs.lib.makeLibraryPath [ php containerPkgs.openssl containerPkgs.icu containerPkgs.zlib ]}"
+                "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+                "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ php pkgs.openssl pkgs.icu pkgs.zlib ]}"
                 "PHP_FPM_PM=dynamic"
                 "PHP_FPM_PM_MAX_CHILDREN=50"
               ];
