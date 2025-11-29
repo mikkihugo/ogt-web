@@ -129,6 +129,21 @@
         # =====================================================================
         startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
 
+        # This guarantees /bin/start.sh is present in the container root
+        rootWithEntrypoint = pkgs.buildEnv {
+          name = "root";
+          paths = runtimePkgs ++ servicePkgs ++ [
+            php
+            php.packages.composer
+            exporters
+            startScript
+            caddyConfig
+            supervisordConfig
+            magentoTheme
+          ];
+          pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
+        };
+
         caddyConfig = pkgs.runCommand "caddy-config" {} ''
           mkdir -p $out/etc/caddy
           cp -r ${./docker/caddy}/* $out/etc/caddy/
@@ -163,22 +178,10 @@
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
-            copyToRoot = pkgs.buildEnv {
-              name = "root";
-              paths = runtimePkgs ++ servicePkgs ++ [
-                php
-                php.packages.composer
-                exporters
-                startScriptSymlink
-                caddyConfig
-                supervisordConfig
-                magentoTheme
-              ];
-              pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
-            };
+            copyToRoot = rootWithEntrypoint;
             perms = [
               {
-                path = startScriptSymlink;
+                path = startScript;
                 regex = ".*";
                 mode = "0755";
               }
