@@ -130,29 +130,20 @@
         # =====================================================================
         # Container root filesystem
         # =====================================================================
-        # writeShellScriptBin creates a derivation with the script at $out/bin/start.sh
-        startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
+        # Create start.sh script directly at /bin/start.sh
+        startScript = pkgs.runCommand "start-script" {} ''
+          mkdir -p $out/bin
+          cp ${./docker/start.sh} $out/bin/start.sh
+          chmod +x $out/bin/start.sh
+        '';
 
-        # buildEnv creates a unified filesystem by symlinking paths together.
-        # This follows the official nix2container pattern (see examples/bash.nix).
-        #
-        # When we want tools in /, we use symlinks to avoid duplicating files
-        # between / and /nix/store. This preserves library dependencies while
-        # providing executables at standard paths like /bin.
-        #
-        # pathsToLink = ["/bin"] tells buildEnv to symlink ALL /bin directories
-        # from the input paths into a single /bin in the output derivation.
-        # So startScript's /bin/start.sh becomes accessible at /bin/start.sh
-        # in the container root.
-        #
-        # Reference: https://github.com/nlewo/nix2container/blob/master/examples/bash.nix
-        rootWithEntrypoint = pkgs.buildEnv {
+        # Merge all runtime dependencies
+        rootEnv = pkgs.buildEnv {
           name = "root";
           paths = runtimePkgs ++ servicePkgs ++ [
             php
             php.packages.composer
             exporters
-            startScript  # Provides /bin/start.sh
             caddyConfig
             supervisordConfig
             magentoTheme
@@ -203,7 +194,7 @@
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
-            copyToRoot = rootWithEntrypoint;
+            copyToRoot = [ startScript rootEnv ];
             config = {
               # Default command - executes /bin/start.sh from rootWithEntrypoint
               Cmd = [ "/bin/start.sh" ];
