@@ -25,33 +25,17 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Deploy to Fly.io
+      - name: Build and push AMD64 image
         shell: bash
         run: |
           # Sanitize token: remove leading/trailing whitespace only (preserve internal spaces for FlyV1 tokens)
           export FLY_API_TOKEN=$(echo "${{ secrets.FLY_API_TOKEN }}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-          
-          # Set Fly runtime secrets from GitHub secrets
-          flyctl secrets set \
-            COMPOSER_MAGENTO_USERNAME="${{ secrets.COMPOSER_MAGENTO_USERNAME }}" \
-            COMPOSER_MAGENTO_PASSWORD="${{ secrets.COMPOSER_MAGENTO_PASSWORD }}" \
-            --stage
-          
-          # Build and Push with Nix
+
           # Login to Fly Registry
           flyctl auth docker
-          
-          # Build and push image
-          nix run .#container.copyToRegistry
-          
-          # Deploy the pushed image
-          # The tag is based on the commit SHA (first 8 chars)
-          TAG=$(echo $GITHUB_SHA | cut -c1-8)
-          flyctl deploy --image registry.fly.io/ogt-web:$TAG --remote-only
 
-      - name: Build and push AMD64 image
-        shell: bash
-        run: |
+          # Build AMD64 image and push to registry (Fly.io requires x86_64)
+          echo "Building AMD64 (x86_64) image for Fly.io..."
           nix run .#container.copyToRegistry --system x86_64-linux
 
           # Robust check for manifest file before attempting to read it
@@ -72,3 +56,21 @@ jobs:
             echo "WARNING: No manifest file found at 'result'"
             echo "Skipping architecture verification (build may have succeeded without manifest)"
           fi
+
+      - name: Deploy to Fly.io
+        shell: bash
+        run: |
+          # Sanitize token: remove leading/trailing whitespace only (preserve internal spaces for FlyV1 tokens)
+          export FLY_API_TOKEN=$(echo "${{ secrets.FLY_API_TOKEN }}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+          # Set Fly runtime secrets from GitHub secrets
+          flyctl secrets set \
+            COMPOSER_MAGENTO_USERNAME="${{ secrets.COMPOSER_MAGENTO_USERNAME }}" \
+            COMPOSER_MAGENTO_PASSWORD="${{ secrets.COMPOSER_MAGENTO_PASSWORD }}" \
+            --stage
+
+          # Deploy the AMD64 image we just built and pushed
+          # The tag is based on the commit SHA (first 8 chars)
+          TAG=$(echo $GITHUB_SHA | cut -c1-8)
+          echo "Deploying AMD64 image: registry.fly.io/ogt-web:$TAG"
+          flyctl deploy --image registry.fly.io/ogt-web:$TAG --remote-only
