@@ -130,12 +130,8 @@
         # =====================================================================
         # Container root filesystem
         # =====================================================================
-        # Create start.sh script directly at /bin/start.sh
-        startScript = pkgs.runCommand "start-script" {} ''
-          mkdir -p $out/bin
-          cp ${./docker/start.sh} $out/bin/start.sh
-          chmod +x $out/bin/start.sh
-        '';
+        # Create start.sh script at /bin/start.sh using writeShellScriptBin
+        startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
 
         # Merge all runtime dependencies
         rootEnv = pkgs.buildEnv {
@@ -147,7 +143,6 @@
             caddyConfig
             supervisordConfig
             magentoTheme
-            startScript  # Include startScript here so /bin/start.sh is merged properly
           ];
           pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
         };
@@ -243,10 +238,10 @@
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
-            copyToRoot = [ rootEnv magentoCore ];
+            copyToRoot = [ rootEnv magentoCore startScript ];
             config = {
-              # Default command - executes start.sh from nix store
-              Cmd = [ "${startScript}/bin/start.sh" ];
+              # Default command - executes /bin/start.sh from writeShellScriptBin
+              Cmd = [ "/bin/start.sh" ];
               # Environment variables (OCI spec capitalization)
               Env = [
                 "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
