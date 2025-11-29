@@ -53,8 +53,5 @@ jobs:
         shell: bash
         run: |
           nix run .#container.copyToRegistry --system x86_64-linux
-          if command -v jq >/dev/null; then
-            jq '.architecture' result | grep -q 'amd64\|x86_64' || { echo "ERROR: Not an AMD64 image!"; exit 1; }
-          else
-            cat result | grep -q 'amd64\|x86_64' || { echo "ERROR: Not an AMD64 image!"; exit 1; }
-          fi
+          ls -lh result*
+          cat result* | head -20 | grep -q 'amd64\|x86_64' || { echo "ERROR: Not an AMD64 image!"; exit 1; }
