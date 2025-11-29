@@ -1,21 +1,10 @@
 [mysqld]
+# Local-only MariaDB: no network, unix socket only (override at runtime if needed)
 binlog_format=ROW
 default-storage-engine=innodb
 innodb_autoinc_lock_mode=2
-bind-address=::
-
-# Galera Provider Configuration
-wsrep_on=ON
-# Provider path will be verified in start.sh or assumed standard
-wsrep_provider=/usr/lib/galera/libgalera_smm.so
-
-# Galera Cluster Configuration
-wsrep_cluster_name="magneto_cluster"
-
-# Galera Synchronization Configuration
-wsrep_sst_method=rsync
-
-# Log to stderr for Fly.io telemetry
-log_error = /dev/stderr
-
-# Node address will be set at runtime
+skip-networking=ON
+socket=/run/mysqld/mysqld.sock
+bind-address=127.0.0.1
+log_error=/dev/stderr
+wsrep_on=OFF

@@ -1,123 +1,114 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-echo "Starting ogt-web (Galera + Web + Redis)..."
+echo "Starting ogt-web (hyperconverged: MariaDB + Redis + PHP-FPM + Caddy)..."
 
-# 0. Start Redis
+# 0. Start Redis (local only)
 echo "Starting Redis..."
 redis-server --daemonize yes --port 6379 --loglevel warning
 
-# 1. Initialize MariaDB Data Directory
+# 1. Initialize MariaDB (unix socket only, no network exposure)
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-    echo "Initializing MariaDB data directory..."
-    mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null
+  echo "Initializing MariaDB data directory..."
+  mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null
 fi
 
-# 2. Galera Configuration & Discovery
-# Only if we are in Fly (check env var or something, but we can assume yes for now)
-# We need to set the node address and cluster address
-# Fly uses IPv6 for internal networking.
-# We need to find our own IP and peer IPs.
+mkdir -p /run/mysqld
+chown -R mysql:mysql /run/mysqld
 
-MY_IP=$(hostname -i | awk '{print $1}') # Take the first one if multiple
-echo "My IP: $MY_IP"
+cat > /etc/my.cnf.d/runtime.cnf <<EOF
+[mysqld]
+skip-networking=ON
+socket=/run/mysqld/mysqld.sock
+bind-address=127.0.0.1
+log_error=/dev/stderr
+wsrep_on=OFF
+EOF
 
-# Update Galera Config with Node Address
-echo "[mysqld]" > /etc/my.cnf.d/galera_runtime.cnf
-echo "wsrep_node_address=[$MY_IP]" >> /etc/my.cnf.d/galera_runtime.cnf
-
-# Peer Discovery
-# We use the Fly internal DNS name: $FLY_APP_NAME.internal
-if [ -n "$FLY_APP_NAME" ]; then
-    echo "Discovering peers for $FLY_APP_NAME..."
-    # Get all AAAA records, remove own IP
-    # We use 'dig' from bind-tools
-    PEERS=$(dig +short AAAA ${FLY_APP_NAME}.internal | grep -v "$MY_IP" | paste -s -d, -)
-    
-    if [ -z "$PEERS" ]; then
-        echo "No peers found. Bootstrapping primary component..."
-        # gcomm:// means "I am the first/primary"
-        WSREP_CLUSTER_ADDRESS="gcomm://"
-    else
-        echo "Found peers: $PEERS. Joining cluster..."
-        # Galera handles IPv6, but sometimes needs brackets. 
-        # For now, we try without brackets in the list, as some versions are picky.
-        # If it fails, we might need to format as [ip1],[ip2]
-        WSREP_CLUSTER_ADDRESS="gcomm://$PEERS" 
-    fi
-    
-    echo "wsrep_cluster_address=$WSREP_CLUSTER_ADDRESS" >> /etc/my.cnf.d/galera_runtime.cnf
-else
-    echo "FLY_APP_NAME not set. Assuming localhost/standalone."
-    echo "wsrep_on=OFF" >> /etc/my.cnf.d/galera_runtime.cnf
-fi
-
-# 3. Start MariaDB
 echo "Starting MariaDB..."
-# We use mysqld_safe. It will pick up configs from /etc/my.cnf.d/
-mysqld_safe --datadir=/var/lib/mysql &
-MYSQL_PID=$!
+mysqld_safe --datadir=/var/lib/mysql --socket=/run/mysqld/mysqld.sock &
 
-# Wait for MariaDB to be ready
 echo "Waiting for MariaDB..."
 for i in {1..60}; do
-    if mysqladmin ping -h localhost --silent; then
-        echo "MariaDB is up!"
-        break
-    fi
-    sleep 2
+  if mysqladmin --socket=/run/mysqld/mysqld.sock ping --silent; then
+    echo "MariaDB is up!"
+    break
+  fi
+  sleep 2
 done
 
-# 4. Magento Setup (Idempotent)
-echo "Checking Magento Database..."
-# Wait a bit more for cluster sync if needed
-sleep 5
+# 2. Magento setup (idempotent)
+echo "Checking Magento database..."
+sleep 2
 
-mysql -e "CREATE DATABASE IF NOT EXISTS magento;"
-mysql -e "CREATE USER IF NOT EXISTS 'magento'@'localhost' IDENTIFIED BY 'magento';"
-mysql -e "GRANT ALL PRIVILEGES ON magento.* TO 'magento'@'localhost';"
-mysql -e "CREATE USER IF NOT EXISTS 'exporter'@'localhost' IDENTIFIED BY 'exporterpass' WITH MAX_USER_CONNECTIONS 3;"
-mysql -e "GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'localhost';"
-mysql -e "FLUSH PRIVILEGES;"
+DB_NAME=${DB_NAME:-magento}
+DB_USER=${DB_USER:-magento}
+DB_PASSWORD=${DB_PASSWORD:-magento}
+EXPORTER_PASSWORD=${EXPORTER_PASSWORD:-exporterpass}
 
-# Create MySQL config for exporter
+mysql --socket=/run/mysqld/mysqld.sock -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
+mysql --socket=/run/mysqld/mysqld.sock -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
+mysql --socket=/run/mysqld/mysqld.sock -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';"
+mysql --socket=/run/mysqld/mysqld.sock -e "CREATE USER IF NOT EXISTS 'exporter'@'localhost' IDENTIFIED BY '${EXPORTER_PASSWORD}' WITH MAX_USER_CONNECTIONS 3;"
+mysql --socket=/run/mysqld/mysqld.sock -e "GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'localhost';"
+mysql --socket=/run/mysqld/mysqld.sock -e "FLUSH PRIVILEGES;"
+
 cat > /etc/.mysqld_exporter.cnf <<EOF
 [client]
 user=exporter
-password=exporterpass
+password=${EXPORTER_PASSWORD}
+socket=/run/mysqld/mysqld.sock
 EOF
 
 if [ ! -f "/var/www/html/app/etc/env.php" ]; then
-    echo "Installing Magento..."
-    cd /var/www/html && bin/magento setup:install \
-        --base-url=${MAGENTO_BASE_URL:-http://localhost:8080/} \
-        --db-host=localhost \
-        --db-name=magento \
-        --db-user=magento \
-        --db-password=magento \
-        --admin-firstname=${ADMIN_FIRSTNAME:-Admin} \
-        --admin-lastname=${ADMIN_LASTNAME:-User} \
-        --admin-email=${ADMIN_EMAIL:-admin@example.com} \
-        --admin-user=${ADMIN_USER:-admin} \
-        --admin-password=${ADMIN_PASSWORD:-Admin123!} \
-        --session-save=redis \
-        --session-save-redis-host=localhost \
-        --session-save-redis-port=6379 \
-        --cache-backend=redis \
-        --cache-backend-redis-server=localhost \
-        --cache-backend-redis-port=6379 \
-        --language=en_US --currency=USD --timezone=UTC --use-rewrites=1
+  echo "Installing Magento (one-time bootstrap)..."
+  ADMIN_USER=${ADMIN_USER:-}
+  ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+  ADMIN_EMAIL=${ADMIN_EMAIL:-}
+
+  if [ -z "${ADMIN_USER}" ] || [ "${ADMIN_USER}" = "admin" ]; then
+    echo "ADMIN_USER must be set to a non-default value (export ADMIN_USER)." >&2
+    exit 1
+  fi
+  if [ -z "${ADMIN_PASSWORD}" ] || [ "${ADMIN_PASSWORD}" = "Admin123!" ]; then
+    echo "ADMIN_PASSWORD must be set to a strong value (export ADMIN_PASSWORD)." >&2
+    exit 1
+  fi
+  if [ -z "${ADMIN_EMAIL}" ]; then
+    echo "ADMIN_EMAIL must be set (export ADMIN_EMAIL)." >&2
+    exit 1
+  fi
+
+  cd /var/www/html && bin/magento setup:install \
+    --base-url=${MAGENTO_BASE_URL:-http://localhost:8080/} \
+    --db-host=localhost \
+    --db-name=${DB_NAME} \
+    --db-user=${DB_USER} \
+    --db-password=${DB_PASSWORD} \
+    --admin-firstname=${ADMIN_FIRSTNAME:-Admin} \
+    --admin-lastname=${ADMIN_LASTNAME:-User} \
+    --admin-email=${ADMIN_EMAIL} \
+    --admin-user=${ADMIN_USER} \
+    --admin-password=${ADMIN_PASSWORD} \
+    --session-save=redis \
+    --session-save-redis-host=localhost \
+    --session-save-redis-port=6379 \
+    --cache-backend=redis \
+    --cache-backend-redis-server=localhost \
+    --cache-backend-redis-port=6379 \
+    --language=en_US --currency=USD --timezone=UTC --use-rewrites=1
 fi
 
-# 5. Start Prometheus Exporters for Telemetry
+# 3. Telemetry exporters
 echo "Starting Prometheus exporters..."
 mysqld_exporter --config.my-cnf /etc/.mysqld_exporter.cnf --web.listen-address=":9104" &
 redis_exporter --redis.addr localhost:6379 --web.listen-address=":9121" &
-php-fpm_exporter server --phpfpm.scrape-uri tcp://127.0.0.1:9000/status --web.listen-address=":9253" &
+php-fpm_exporter server --phpfpm.scrape-uri unix:///run/php-fpm.sock --web.listen-address=":9253" &
 
-# 6. Start Web Services
+# 4. Web tier: PHP-FPM + Caddy (FastCGI)
 echo "Starting PHP-FPM..."
+mkdir -p /run/php-fpm
 php-fpm -D
 
-echo "Starting Traefik..."
-exec traefik --configFile=/etc/traefik/traefik.yml
+echo "Starting Caddy..."
+exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile

@@ -23,7 +23,8 @@ RUN apk add --no-cache \
     unzip \
     zip \
     wget \
-    redis
+    redis \
+    caddy
 
 # Install build dependencies for PHP extensions
 RUN apk add --no-cache --virtual .build-deps \
@@ -55,19 +56,15 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Install Traefik
-RUN wget -qO- https://github.com/traefik/traefik/releases/download/v3.0.0/traefik_v3.0.0_linux_amd64.tar.gz | tar -xz -C /usr/local/bin/ traefik && \
-    chmod +x /usr/local/bin/traefik
-
-# Copy Traefik configuration
-COPY docker/traefik/ /etc/traefik/
-
-# Copy PHP-FPM configuration
+# PHP-FPM listens on unix socket for Caddy fastcgi
 RUN echo "clear_env = no" >> /usr/local/etc/php-fpm.d/www.conf && \
     echo "pm.status_path = /status" >> /usr/local/etc/php-fpm.d/www.conf && \
     echo "access.log = /dev/stdout" >> /usr/local/etc/php-fpm.d/www.conf && \
     echo "error_log = /dev/stderr" >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo "listen = 127.0.0.1:9000" >> /usr/local/etc/php-fpm.d/www.conf
+    echo "listen = /run/php-fpm.sock" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "listen.owner = www-data" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "listen.group = www-data" >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/www.conf
 
 FROM base AS build
 
@@ -124,8 +121,11 @@ RUN curl -fsSL -o /tmp/php-fpm_exporter.tar.gz \
 # Expose port 8080 (Fly.io standard)
 EXPOSE 8080
 
-# Copy Galera configuration
+# Copy MySQL runtime configuration
 COPY docker/mariadb/galera.cnf /etc/my.cnf.d/galera.cnf
+
+# Copy Caddy configuration
+COPY docker/caddy /etc/caddy
 
 # Copy start script
 COPY docker/start.sh /start.sh

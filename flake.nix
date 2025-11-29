@@ -119,7 +119,7 @@
         # Service binaries
         # =====================================================================
         servicePkgs = with pkgs; [
-          traefik
+          caddy
           redis
         ];
 
@@ -128,9 +128,9 @@
         # =====================================================================
         startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
 
-        traefikConfig = pkgs.runCommand "traefik-config" {} ''
-          mkdir -p $out/etc/traefik
-          cp -r ${./docker/traefik}/* $out/etc/traefik/
+        caddyConfig = pkgs.runCommand "caddy-config" {} ''
+          mkdir -p $out/etc/caddy
+          cp -r ${./docker/caddy}/* $out/etc/caddy/
         '';
 
       in
@@ -158,7 +158,7 @@
                 php.packages.composer
                 exporters
                 startScript
-                traefikConfig
+                caddyConfig
               ];
               pathsToLink = [ "/bin" "/lib" "/share" "/etc" ];
             };
@@ -207,13 +207,16 @@
             kubectl
             kubernetes-helm
             flyctl
+            dotenvx
+            awscli2
+            infisical
           ];
 
           shellHook = ''
             export IN_NIX_SHELL=1
             export NIX_SHELL_PROJECT="ogt-web"
             echo "🐳 OGT-Web Nix Shell"
-            echo "PHP 8.3 | Composer | MySQL 10.11 | Docker | Flyctl"
+            echo "PHP 8.3 | Composer | MySQL 10.11 | Caddy | Flyctl"
             echo ""
             echo "Commands:"
             echo "  nix build .#container   # Build Docker image"
@@ -237,6 +240,54 @@
               docker load < result
               echo "Done! Image: ogt-web:latest"
             '');
+          };
+
+          sync-media = {
+            type = "app";
+            program = "${pkgs.writeShellApplication {
+              name = "sync-media";
+              runtimeInputs = [ pkgs.awscli2 ];
+              text = ''
+                set -euo pipefail
+                : "''${S3_BUCKET:?Set S3_BUCKET (bucket name)}"
+                SRC=''${1:-pub/media}
+                DEST="s3://''${S3_BUCKET%/}/media/"
+
+                args=()
+                if [ -n "''${S3_REGION:-}" ]; then
+                  args+=(--region "''${S3_REGION}")
+                fi
+                if [ -n "''${S3_ENDPOINT:-}" ]; then
+                  args+=(--endpoint-url "''${S3_ENDPOINT}")
+                fi
+
+                aws s3 sync "$SRC" "$DEST" --delete "''${args[@]}"
+              '';
+            }}/bin/sync-media";
+          };
+
+          restore-media = {
+            type = "app";
+            program = "${pkgs.writeShellApplication {
+              name = "restore-media";
+              runtimeInputs = [ pkgs.awscli2 ];
+              text = ''
+                set -euo pipefail
+                : "''${S3_BUCKET:?Set S3_BUCKET (bucket name)}"
+                SRC="s3://''${S3_BUCKET%/}/media/"
+                DEST=''${1:-pub/media}
+
+                args=()
+                if [ -n "''${S3_REGION:-}" ]; then
+                  args+=(--region "''${S3_REGION}")
+                fi
+                if [ -n "''${S3_ENDPOINT:-}" ]; then
+                  args+=(--endpoint-url "''${S3_ENDPOINT}")
+                fi
+
+                aws s3 sync "$SRC" "$DEST" "''${args[@]}"
+              '';
+            }}/bin/restore-media";
           };
         };
       }

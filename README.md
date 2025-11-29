@@ -12,6 +12,7 @@ This repository contains everything needed to launch **orgasmtoy.com**:
   - `Klarna_Checkout/` — Complete Klarna payment integration
 - **Fly.io deployment** — Containerized deployment with auto-scaling
 - **CI/CD** — Automatic deployment from Git
+- **Runtime stack** — Hyperconverged container (Caddy + PHP-FPM over unix socket, MariaDB socket-only, Redis, Prometheus exporters), built and reproducible via Nix/direnv with dotenvx+Infisical-managed secrets
 
 ## 🎯 Quick Start
 
