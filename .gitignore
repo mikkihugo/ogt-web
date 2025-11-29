@@ -2,9 +2,6 @@
 .env
 .env.local
 .env.*.local
-.env.private
-.env.keys
-.env.*.keys
 
 # Magento specific
 var/

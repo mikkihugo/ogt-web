@@ -1,13 +1,36 @@
-# msgnet2 Magento 2 theme skeleton
+# Orgasmtoy Theme for Magento 2
 
-This folder contains a minimal Magento 2 theme skeleton you can use to start integrating the prototype UI into Magento 2 (Luma-like folder structure). It is not a full theme — copy templates, layout XML and styles into your Magento 2 installation under app/design/frontend/Vendor/msgnet2.
+A professional, discreet e-commerce theme designed specifically for adult wellness products, extending Magento Luma with custom styling and privacy-focused features.
 
-Files included:
-- `registration.php` — Magento theme registration
-- `theme.xml` — basic theme metadata
-- `composer.json` — optional composer package
+## Features
 
-Next steps:
-1. Copy this folder to your Magento 2 instance at `app/design/frontend/<Vendor>/msgnet2`.
-2. Add static assets under `web/css`, `web/images`, etc., and map templates.
-3. Run bin/magento setup:upgrade and deploy static content as needed.
+### Design & UX
+- **Professional & Discreet**: Clean, sophisticated design suitable for adult products
+- **Fully Responsive**: Mobile-first approach with excellent tablet and desktop support
+- **Luma-Based**: Extends the proven Magento Luma theme for reliability and compatibility
+- **Performance Optimized**: Lightweight custom CSS and JavaScript
+
+### Privacy & Trust Features
+- Privacy assurance badges on product pages
+- Discreet shipping information prominently displayed
+- Trust indicators in footer (SSL, secure payment, discreet packaging)
+- Privacy-focused checkout experience
+
+## Installation
+
+The theme is automatically installed when building the Docker container. To activate:
+
+1. Build and deploy the container
+2. Access Magento Admin panel
+3. Go to **Content → Design → Configuration**
+4. Select your store view and choose **Orgasmtoy Theme**
+5. Save configuration
+6. Run: `bin/magento cache:flush`
+
+## Customization
+
+Edit `/web/css/source/_extend.less` to customize colors and styles.
+
+## License
+
+MIT License

@@ -12,7 +12,7 @@ This repository contains everything needed to launch **orgasmtoy.com**:
   - `Klarna_Checkout/` — Complete Klarna payment integration
 - **Fly.io deployment** — Containerized deployment with auto-scaling
 - **CI/CD** — Automatic deployment from Git
-- **Runtime stack** — Hyperconverged container (Caddy + PHP-FPM over unix socket, MariaDB socket-only, Redis, Prometheus exporters), built and reproducible via Nix/direnv with dotenvx+Infisical-managed secrets
+- **Runtime stack** — Hyperconverged container (Caddy + PHP-FPM over unix socket, MariaDB socket-only, Redis, Prometheus exporters), built and reproducible via Nix with git-crypt-managed secrets
 
 ## 🎯 Quick Start
 
@@ -198,6 +198,13 @@ magneto-web/
 - ✅ Test mode for development
 - ✅ Production-ready error handling
 - ✅ PCI DSS compliant payment flow
+
+## 🔒 Secrets & Key Management (Nix-native, CI, Fly.io)
+- Secrets (e.g. `.env.encrypted`, `secrets/*`) are encrypted in the repo using git-crypt.
+- The git-crypt key is named `../.keys/ogt-web.git-crypt.key` and should never be committed.
+- Backup/restore the key via a private Gist using `./gitcrypt-gist.sh`.
+- Inject secrets into Fly.io or GitHub Actions using `./secrets-sync.sh fly .env.encrypted` or `./secrets-sync.sh gh .env.encrypted`.
+- All scripts are available in the Nix dev shell and referenced in `flake.nix`.
 
 ## 🛠️ Technology Stack
 

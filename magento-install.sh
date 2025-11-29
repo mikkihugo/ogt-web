@@ -2,15 +2,10 @@
 set -euo pipefail
 
 # Simple helper to create a Magento 2 project using composer inside the repo and run basic setup.
-# This script expects these env vars to be set (you can copy .env.example to .env and edit):
-# COMPOSER_MAGENTO_USERNAME, COMPOSER_MAGENTO_PASSWORD, MAGENTO_BASE_URL
-
-if [ -f .env ]; then
-  export $(grep -v '^#' .env | xargs)
-fi
+# This script expects environment variables to be set via git-crypt managed .env.encrypted only.
 
 if [ -z "${COMPOSER_MAGENTO_USERNAME:-}" ] || [ -z "${COMPOSER_MAGENTO_PASSWORD:-}" ]; then
-  echo "Please set COMPOSER_MAGENTO_USERNAME and COMPOSER_MAGENTO_PASSWORD (Magento repo keys) in .env"
+  echo "Please set COMPOSER_MAGENTO_USERNAME and COMPOSER_MAGENTO_PASSWORD (Magento repo keys) in .env.encrypted"
   exit 1
 fi
 

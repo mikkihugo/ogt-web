@@ -54,6 +54,9 @@
         pkgs = nixpkgs.legacyPackages.${system};
         n2c = nix2container.packages.${system}.nix2container;
 
+        # Paths to non-repo scripts
+        gitcryptGistScript = ./gitcrypt-gist.sh;
+        secretsSyncScript = ./secrets-sync.sh;
         # =====================================================================
         # PHP with Magento-required extensions
         # =====================================================================
@@ -219,12 +222,12 @@
             traefik
             redis
             git
+            git-crypt
+            gh  # GitHub CLI for gist management
             kubectl
             kubernetes-helm
             flyctl
-            dotenvx
             awscli2
-            infisical
             podman
             skopeo
             shadow  # provides newuidmap/newgidmap for rootless containers
@@ -241,6 +244,7 @@
             echo "  git push origin master  # Deploy"
             echo "  fly logs --follow       # Monitor"
             echo ""
+            echo "Secrets are managed via git-crypt and .env.encrypted only."
           '';
         };
 
@@ -307,6 +311,12 @@
               '';
             }}/bin/restore-media";
           };
+        };
+
+        # Non-repo scripts for secrets and key management
+        scripts = {
+          gitcryptGist = ./gitcrypt-gist.sh;
+          secretsSync = ./secrets-sync.sh;
         };
       }
     );

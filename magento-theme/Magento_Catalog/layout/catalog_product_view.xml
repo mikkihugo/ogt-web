@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Product Detail Page Layout
+ * Customizations for product pages
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="css/product.css"/>
+    </head>
+
+    <body>
+        <!-- Add privacy assurance to product page -->
+        <referenceContainer name="product.info.main">
+            <block class="Magento\Framework\View\Element\Template"
+                   name="product.privacy.assurance"
+                   template="Magento_Catalog::product/privacy-assurance.phtml"
+                   after="product.info.price"/>
+        </referenceContainer>
+
+        <!-- Enhance product details -->
+        <referenceBlock name="product.info.details">
+            <block class="Magento\Catalog\Block\Product\View\Description"
+                   name="product.info.discreet"
+                   template="Magento_Catalog::product/view/discreet-info.phtml"
+                   group="detailed_info">
+                <arguments>
+                    <argument name="title" translate="true" xsi:type="string">Shipping &amp; Privacy</argument>
+                    <argument name="sort_order" xsi:type="string">20</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
