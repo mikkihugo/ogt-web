@@ -48,3 +48,13 @@ jobs:
           # The tag is based on the commit SHA (first 8 chars)
           TAG=$(echo $GITHUB_SHA | cut -c1-8)
           flyctl deploy --image registry.fly.io/ogt-web:$TAG --remote-only
+
+      - name: Build and push AMD64 image
+        shell: bash
+        run: |
+          nix run .#container.copyToRegistry --system x86_64-linux
+          if command -v jq >/dev/null; then
+            jq '.architecture' result | grep -q 'amd64\|x86_64' || { echo "ERROR: Not an AMD64 image!"; exit 1; }
+          else
+            cat result | grep -q 'amd64\|x86_64' || { echo "ERROR: Not an AMD64 image!"; exit 1; }
+          fi

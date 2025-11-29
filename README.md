@@ -228,3 +228,5 @@ Contributions are welcome! Please open issues or pull requests with improvements
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+**Note:** All production container images are built and deployed as AMD64 (x86_64) via CI. The workflow enforces this and will fail if the architecture is not correct.

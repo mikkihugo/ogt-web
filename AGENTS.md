@@ -13,3 +13,5 @@
 - All automation is Nix-native and CI-friendly.
 
 - Secrets are managed exclusively via git-crypt and `.env.encrypted`. No dotenvx or Infisical required. Use the provided scripts for key management and secrets sync.
+
+**Architecture Policy:** All production container images must be AMD64 (x86_64). CI enforces this and will fail the build if the architecture is not correct.
