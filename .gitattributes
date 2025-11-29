@@ -1,0 +1,4 @@
+# Encrypt secrets and env files with git-crypt
+secrets/** filter=git-crypt
+.env.encrypted filter=git-crypt
+../.keys/* filter=git-crypt
