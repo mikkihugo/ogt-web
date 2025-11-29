@@ -132,7 +132,7 @@
         # =====================================================================
         startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
 
-        # This guarantees /bin/start.sh is present in the container root
+        # buildEnv automatically symlinks /bin from all paths
         rootWithEntrypoint = pkgs.buildEnv {
           name = "root";
           paths = runtimePkgs ++ servicePkgs ++ [
@@ -140,7 +140,6 @@
             php.packages.composer
             exporters
             startScript
-            startScriptSymlink
             caddyConfig
             supervisordConfig
             magentoTheme
@@ -169,14 +168,6 @@
           fi
         '';
 
-        # Ensure /bin/start.sh is present by explicitly symlinking it
-        startScriptSymlink = pkgs.runCommand "startScriptSymlink" {
-          buildInputs = [ startScript ];
-        } ''
-          mkdir -p $out/bin
-          ln -s ${startScript}/bin/start.sh $out/bin/start.sh
-        '';
-
       in
       {
         # =====================================================================
@@ -192,25 +183,18 @@
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
             copyToRoot = rootWithEntrypoint;
-            perms = [
-              {
-                path = rootWithEntrypoint;
-                regex = ".*/bin/start\\.sh$";
-                mode = "0755";
-              }
-            ];
             config = {
-              entrypoint = [ "/bin/start.sh" ];
-              env = [
+              Cmd = [ "/bin/start.sh" ];
+              Env = [
                 "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
                 "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ php pkgs.openssl pkgs.icu pkgs.zlib ]}"
                 "PHP_FPM_PM=dynamic"
                 "PHP_FPM_PM_MAX_CHILDREN=50"
               ];
-              exposedPorts = {
+              ExposedPorts = {
                 "8080/tcp" = {};
               };
-              workingDir = "/var/www/html";
+              WorkingDir = "/var/www/html";
             };
           };
 
