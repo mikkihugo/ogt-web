@@ -61,6 +61,28 @@ password=${EXPORTER_PASSWORD}
 socket=/run/mysqld/mysqld.sock
 EOF
 
+# Setup persistent web root in /var/lib/mysql/www (single volume hack)
+# We must step out of /var/www/html (WORKDIR) before replacing it
+cd /
+
+PERSISTENT_WEB="/var/lib/mysql/www"
+
+# Ensure parent dir is traversable by www-data
+chmod 711 /var/lib/mysql
+
+if [ ! -d "$PERSISTENT_WEB" ]; then
+    echo "Creating persistent web root at $PERSISTENT_WEB..."
+    mkdir -p "$PERSISTENT_WEB"
+    chown www-data:www-data "$PERSISTENT_WEB"
+fi
+
+if [ ! -L "/var/www/html" ]; then
+    echo "Symlinking /var/www/html to $PERSISTENT_WEB..."
+    # Remove existing directory (empty or ephemeral)
+    rm -rf /var/www/html
+    ln -s "$PERSISTENT_WEB" /var/www/html
+fi
+
 # 3. Install Magento code if missing (Runtime Bootstrap)
 if [ ! -f "/var/www/html/bin/magento" ]; then
   echo "Magento source not found. Installing via Composer..."
