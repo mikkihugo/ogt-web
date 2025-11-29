@@ -52,6 +52,11 @@
           <label>New Order Status</label>
           <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
         </field>
+        <field id="webhook_secret" translate="label" type="obscure" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="0">
+          <label>Webhook Signing Secret</label>
+          <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+          <comment><![CDATA[Get this from Stripe Dashboard → Developers → Webhooks. Required for webhook signature validation.<br/>Webhook URL: <strong>/stripe/webhook/handler</strong>]]></comment>
+        </field>
       </group>
     </section>
   </system>

@@ -77,8 +77,37 @@ sleep 2
 
 DB_NAME=${DB_NAME:-magento}
 DB_USER=${DB_USER:-magento}
-DB_PASSWORD=${DB_PASSWORD:-magento}
-EXPORTER_PASSWORD=${EXPORTER_PASSWORD:-exporterpass}
+
+# Security: Require strong passwords, no defaults in production
+if [ -z "${DB_PASSWORD:-}" ]; then
+  echo "ERROR: DB_PASSWORD must be set (minimum 16 characters)" >&2
+  exit 1
+fi
+
+if [ ${#DB_PASSWORD} -lt 16 ]; then
+  echo "ERROR: DB_PASSWORD must be at least 16 characters long" >&2
+  exit 1
+fi
+
+if [ "${DB_PASSWORD}" = "magento" ]; then
+  echo "ERROR: DB_PASSWORD must not be the default value 'magento'" >&2
+  exit 1
+fi
+
+if [ -z "${EXPORTER_PASSWORD:-}" ]; then
+  echo "ERROR: EXPORTER_PASSWORD must be set (minimum 16 characters)" >&2
+  exit 1
+fi
+
+if [ ${#EXPORTER_PASSWORD} -lt 16 ]; then
+  echo "ERROR: EXPORTER_PASSWORD must be at least 16 characters long" >&2
+  exit 1
+fi
+
+if [ "${EXPORTER_PASSWORD}" = "exporterpass" ]; then
+  echo "ERROR: EXPORTER_PASSWORD must not be the default value 'exporterpass'" >&2
+  exit 1
+fi
 
 mysql --socket=/run/mysqld/mysqld.sock -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};"
 mysql --socket=/run/mysqld/mysqld.sock -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';"
@@ -93,6 +122,10 @@ user=exporter
 password=${EXPORTER_PASSWORD}
 socket=/run/mysqld/mysqld.sock
 EOF
+
+# Security: Restrict permissions on MySQL exporter config (contains password)
+chmod 600 /etc/.mysqld_exporter.cnf
+chown nobody:nobody /etc/.mysqld_exporter.cnf
 
 # Setup persistent web root in /var/lib/mysql/www (single volume hack)
 # We must step out of /var/www/html (WORKDIR) before replacing it
@@ -165,16 +198,40 @@ if [ ! -f "/var/www/html/app/etc/env.php" ]; then
   ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
   ADMIN_EMAIL=${ADMIN_EMAIL:-}
 
-  if [ -z "${ADMIN_USER}" ] || [ "${ADMIN_USER}" = "admin" ]; then
-    echo "ADMIN_USER must be set to a non-default value (export ADMIN_USER)." >&2
+  # Security: Validate admin credentials
+  if [ -z "${ADMIN_USER}" ]; then
+    echo "ERROR: ADMIN_USER must be set (export ADMIN_USER)" >&2
     exit 1
   fi
-  if [ -z "${ADMIN_PASSWORD}" ] || [ "${ADMIN_PASSWORD}" = "Admin123!" ]; then
-    echo "ADMIN_PASSWORD must be set to a strong value (export ADMIN_PASSWORD)." >&2
+
+  if [ "${ADMIN_USER}" = "admin" ]; then
+    echo "ERROR: ADMIN_USER must not be the default value 'admin'" >&2
     exit 1
   fi
+
+  if [ -z "${ADMIN_PASSWORD}" ]; then
+    echo "ERROR: ADMIN_PASSWORD must be set (minimum 16 characters)" >&2
+    exit 1
+  fi
+
+  if [ ${#ADMIN_PASSWORD} -lt 16 ]; then
+    echo "ERROR: ADMIN_PASSWORD must be at least 16 characters long" >&2
+    exit 1
+  fi
+
+  if [ "${ADMIN_PASSWORD}" = "Admin123!" ]; then
+    echo "ERROR: ADMIN_PASSWORD must not be the default value 'Admin123!'" >&2
+    exit 1
+  fi
+
+  # Basic email format validation
   if [ -z "${ADMIN_EMAIL}" ]; then
-    echo "ADMIN_EMAIL must be set (export ADMIN_EMAIL)." >&2
+    echo "ERROR: ADMIN_EMAIL must be set (export ADMIN_EMAIL)" >&2
+    exit 1
+  fi
+
+  if [[ ! "${ADMIN_EMAIL}" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+    echo "ERROR: ADMIN_EMAIL must be a valid email address" >&2
     exit 1
   fi
 

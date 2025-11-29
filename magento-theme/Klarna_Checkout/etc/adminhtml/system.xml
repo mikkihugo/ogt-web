@@ -11,9 +11,10 @@
           <label>Merchant ID</label>
           <frontend_type>text</frontend_type>
         </field>
-        <field id="shared_secret" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="shared_secret" translate="label" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Shared Secret</label>
-          <frontend_type>password</frontend_type>
+          <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+          <comment>Your Klarna shared secret will be encrypted in the database</comment>
         </field>
         <field id="test_mode" translate="label" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Test Mode</label>
