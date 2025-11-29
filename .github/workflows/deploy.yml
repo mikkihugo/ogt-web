@@ -27,6 +27,9 @@ jobs:
 
       - name: Build and push AMD64 image
         shell: bash
+        env:
+          COMPOSER_MAGENTO_USERNAME: ${{ secrets.COMPOSER_MAGENTO_USERNAME }}
+          COMPOSER_MAGENTO_PASSWORD: ${{ secrets.COMPOSER_MAGENTO_PASSWORD }}
         run: |
           # Sanitize token: remove leading/trailing whitespace only (preserve internal spaces for FlyV1 tokens)
           export FLY_API_TOKEN=$(echo "${{ secrets.FLY_API_TOKEN }}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')

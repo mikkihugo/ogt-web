@@ -142,6 +142,15 @@ if [ ! -d "$PERSISTENT_WEB" ]; then
     chown www-data:www-data "$PERSISTENT_WEB"
 fi
 
+# Check if Magento is prebuilt in /var/www/html
+if [ -f "/var/www/html/bin/magento" ] && [ ! -L "/var/www/html" ]; then
+    echo "Magento prebuilt found. Copying to persistent storage..."
+    if [ ! -f "$PERSISTENT_WEB/bin/magento" ]; then
+        cp -r /var/www/html/* "$PERSISTENT_WEB/"
+        chown -R www-data:www-data "$PERSISTENT_WEB"
+    fi
+fi
+
 if [ ! -L "/var/www/html" ]; then
     echo "Symlinking /var/www/html to $PERSISTENT_WEB..."
     # Remove existing directory (empty or ephemeral)
@@ -170,26 +179,7 @@ if [ ! -f "/var/www/html/bin/magento" ]; then
   composer create-project --repository-url=https://repo.magento.com/ \
       magento/project-community-edition .
 
-  # Install Theme & Modules (replicating Dockerfile logic)
-  if [ -d "/tmp/magento-theme" ]; then
-      echo "Installing custom theme and modules..."
-      
-      # Theme
-      mkdir -p app/design/frontend/Msgnet/msgnet2
-      cp -r /tmp/magento-theme/* app/design/frontend/Msgnet/msgnet2/
-      rm -rf app/design/frontend/Msgnet/msgnet2/Klarna_Checkout
-      rm -rf app/design/frontend/Msgnet/msgnet2/Stripe_Checkout
-
-      # Modules
-      mkdir -p app/code/Klarna/Checkout
-      cp -r /tmp/magento-theme/Klarna_Checkout/* app/code/Klarna/Checkout/
-
-      mkdir -p app/code/Stripe/Checkout
-      cp -r /tmp/magento-theme/Stripe_Checkout/* app/code/Stripe/Checkout/
-      
-      # Permissions
-      chown -R www-data:www-data /var/www/html
-  fi
+  # Theme & Modules are now installed at build time in Nix
 fi
 
 if [ ! -f "/var/www/html/app/etc/env.php" ]; then

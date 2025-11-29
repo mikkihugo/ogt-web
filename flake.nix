@@ -10,7 +10,7 @@
 # 1. Base layer: busybox, coreutils (rarely changes)
 # 2. Runtime layer: PHP, Composer, MariaDB client (changes with updates)
 # 3. Services layer: Traefik, Redis, exporters (rarely changes)
-# 4. Application layer: Magento code (changes frequently)
+# 4. Application layer: Magento code + theme (changes frequently)
 #
 # FLAKECACHE INTEGRATION:
 # - Runners with FLAKECACHE_RUNNER=true get pre-cached /nix
@@ -172,6 +172,54 @@
           fi
         '';
 
+        # Pre-install Magento core if Composer credentials are available
+        magentoCore = let
+          hasCreds = (builtins.getEnv "COMPOSER_MAGENTO_USERNAME" != null && builtins.getEnv "COMPOSER_MAGENTO_USERNAME" != "") &&
+                     (builtins.getEnv "COMPOSER_MAGENTO_PASSWORD" != null && builtins.getEnv "COMPOSER_MAGENTO_PASSWORD" != "");
+        in
+          if hasCreds then
+            pkgs.runCommand "magento-core" {
+              COMPOSER_MAGENTO_USERNAME = builtins.getEnv "COMPOSER_MAGENTO_USERNAME";
+              COMPOSER_MAGENTO_PASSWORD = builtins.getEnv "COMPOSER_MAGENTO_PASSWORD";
+              nativeBuildInputs = [ php php.packages.composer ];
+            } ''
+              mkdir -p $out/var/www/html
+
+              # Configure Composer auth
+              export HOME=$TMPDIR
+              composer config --global http-basic.repo.magento.com \
+                "$COMPOSER_MAGENTO_USERNAME" "$COMPOSER_MAGENTO_PASSWORD"
+
+              # Install Magento in the output directory
+              cd $out/var/www/html
+              composer create-project --repository-url=https://repo.magento.com/ \
+                magento/project-community-edition . --no-interaction
+
+              # Install custom theme and modules
+              if [ -d "${magentoTheme}/tmp/magento-theme" ]; then
+                # Theme
+                mkdir -p app/design/frontend/Msgnet/msgnet2
+                cp -r ${magentoTheme}/tmp/magento-theme/* app/design/frontend/Msgnet/msgnet2/
+                rm -rf app/design/frontend/Msgnet/msgnet2/Klarna_Checkout
+                rm -rf app/design/frontend/Msgnet/msgnet2/Stripe_Checkout
+
+                # Modules
+                mkdir -p app/code/Klarna/Checkout
+                cp -r ${magentoTheme}/tmp/magento-theme/Klarna_Checkout/* app/code/Klarna/Checkout/
+
+                mkdir -p app/code/Stripe/Checkout
+                cp -r ${magentoTheme}/tmp/magento-theme/Stripe_Checkout/* app/code/Stripe/Checkout/
+              fi
+
+              # Set proper permissions
+              chown -R www-data:www-data $out/var/www/html
+            ''
+          else
+            pkgs.runCommand "magento-core-dummy" {} ''
+              mkdir -p $out
+              echo "Magento core not prebuilt - no Composer credentials" > $out/README.txt
+            '';
+
       in
       {
         # =====================================================================
@@ -194,7 +242,7 @@
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
-            copyToRoot = [ startScript rootEnv ];
+            copyToRoot = [ startScript rootEnv magentoCore ];
             config = {
               # Default command - executes /bin/start.sh from rootWithEntrypoint
               Cmd = [ "/bin/start.sh" ];
