@@ -194,8 +194,8 @@
             copyToRoot = rootWithEntrypoint;
             perms = [
               {
-                path = startScript;
-                regex = ".*";
+                path = rootWithEntrypoint;
+                regex = ".*/bin/start\\.sh$";
                 mode = "0755";
               }
             ];
