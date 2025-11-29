@@ -26,9 +26,9 @@ primary_region = 'arn'
   [[http_service.checks]]
     interval = '30s'
     timeout = '5s'
-    grace_period = '10s'
+    grace_period = '60s'
     method = 'GET'
-    path = '/'
+    path = '/health'
 
 [[vm]]
   cpu_kind = 'shared'

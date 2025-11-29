@@ -7,6 +7,11 @@
 		max_size 10MB
 	}
 
+	# Health check endpoint - responds immediately without PHP
+	handle /health {
+		respond "OK" 200
+	}
+
 	# Serve Magento via PHP-FPM over unix socket
 	php_fastcgi unix//run/php-fpm.sock {
 		try_files {path} {path}/ /index.php
