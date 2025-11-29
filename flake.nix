@@ -140,6 +140,7 @@
             php.packages.composer
             exporters
             startScript
+            startScriptSymlink
             caddyConfig
             supervisordConfig
             magentoTheme
