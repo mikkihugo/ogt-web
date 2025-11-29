@@ -6,9 +6,6 @@
 app = 'ogt-web'
 primary_region = 'arn'
 
-[build]
-  dockerfile = 'Dockerfile'
-
 [env]
   SITE_ENV = 'production'
   SITE_NAME = 'orgasmtoy.com'

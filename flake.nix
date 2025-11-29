@@ -159,8 +159,12 @@
                 exporters
                 startScript
                 caddyConfig
+                (pkgs.runCommand "magento-theme" {} ''
+                  mkdir -p $out/tmp/magento-theme
+                  cp -r ${./magento-theme}/* $out/tmp/magento-theme/
+                '')
               ];
-              pathsToLink = [ "/bin" "/lib" "/share" "/etc" ];
+              pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
             };
 
             perms = [

@@ -61,6 +61,49 @@ password=${EXPORTER_PASSWORD}
 socket=/run/mysqld/mysqld.sock
 EOF
 
+# 3. Install Magento code if missing (Runtime Bootstrap)
+if [ ! -f "/var/www/html/bin/magento" ]; then
+  echo "Magento source not found. Installing via Composer..."
+  
+  mkdir -p /var/www/html
+  cd /var/www/html
+
+  # Configure auth
+  if [ -n "${COMPOSER_MAGENTO_USERNAME:-}" ] && [ -n "${COMPOSER_MAGENTO_PASSWORD:-}" ]; then
+      composer config --global http-basic.repo.magento.com \
+          "${COMPOSER_MAGENTO_USERNAME}" "${COMPOSER_MAGENTO_PASSWORD}"
+  else
+      echo "ERROR: COMPOSER_MAGENTO_USERNAME/PASSWORD not set!"
+      exit 1
+  fi
+
+  # Install Magento Open Source
+  # Use --ignore-platform-reqs if needed, but we have PHP extensions installed via Nix
+  composer create-project --repository-url=https://repo.magento.com/ \
+      magento/project-community-edition .
+
+  # Install Theme & Modules (replicating Dockerfile logic)
+  if [ -d "/tmp/magento-theme" ]; then
+      echo "Installing custom theme and modules..."
+      
+      # Theme
+      mkdir -p app/design/frontend/Msgnet/msgnet2
+      cp -r /tmp/magento-theme/* app/design/frontend/Msgnet/msgnet2/
+      rm -rf app/design/frontend/Msgnet/msgnet2/Klarna_Checkout
+      rm -rf app/design/frontend/Msgnet/msgnet2/Stripe_Checkout
+
+      # Modules
+      mkdir -p app/code/Klarna/Checkout
+      cp -r /tmp/magento-theme/Klarna_Checkout/* app/code/Klarna/Checkout/
+
+      mkdir -p app/code/Stripe/Checkout
+      cp -r /tmp/magento-theme/Stripe_Checkout/* app/code/Stripe/Checkout/
+      
+      # Permissions
+      chown -R www-data:www-data /var/www/html
+  fi
+fi
+
 if [ ! -f "/var/www/html/app/etc/env.php" ]; then
   echo "Installing Magento (one-time bootstrap)..."
   ADMIN_USER=${ADMIN_USER:-}

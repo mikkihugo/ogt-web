@@ -37,7 +37,14 @@ jobs:
             COMPOSER_MAGENTO_PASSWORD="${{ secrets.COMPOSER_MAGENTO_PASSWORD }}" \
             --stage
           
-          # Deploy with build args
-          flyctl deploy --remote-only \
-            --build-arg COMPOSER_MAGENTO_USERNAME="${{ secrets.COMPOSER_MAGENTO_USERNAME }}" \
-            --build-arg COMPOSER_MAGENTO_PASSWORD="${{ secrets.COMPOSER_MAGENTO_PASSWORD }}"
+          # Build and Push with Nix
+          # Login to Fly Registry
+          flyctl auth docker
+          
+          # Build and push image
+          nix run .#container.copyToRegistry
+          
+          # Deploy the pushed image
+          # The tag is based on the commit SHA (first 8 chars)
+          TAG=$(echo $GITHUB_SHA | cut -c1-8)
+          flyctl deploy --image registry.fly.io/ogt-web:$TAG --remote-only
