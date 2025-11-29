@@ -155,9 +155,18 @@
 
         supervisordConfig = pkgs.writeTextDir "etc/supervisord.conf" (builtins.readFile ./docker/supervisord.conf);
 
-        magentoTheme = pkgs.runCommand "magento-theme" {} ''
-          mkdir -p $out/tmp/magento-theme
-          cp -r ${./magento-theme}/* $out/tmp/magento-theme/
+        # Conditionally install Magento theme only if Composer keys are present
+        magentoTheme = pkgs.runCommand "magento-theme" {
+          COMPOSER_MAGENTO_USERNAME = if builtins.getEnv "COMPOSER_MAGENTO_USERNAME" != null then builtins.getEnv "COMPOSER_MAGENTO_USERNAME" else "";
+          COMPOSER_MAGENTO_PASSWORD = if builtins.getEnv "COMPOSER_MAGENTO_PASSWORD" != null then builtins.getEnv "COMPOSER_MAGENTO_PASSWORD" else "";
+        } ''
+          if [ -n "$COMPOSER_MAGENTO_USERNAME" ] && [ -n "$COMPOSER_MAGENTO_PASSWORD" ]; then
+            mkdir -p $out/tmp/magento-theme
+            cp -r ${./magento-theme}/* $out/tmp/magento-theme/
+          else
+            mkdir -p $out/tmp/magento-theme
+            echo "Dummy Magento theme (no secrets)" > $out/tmp/magento-theme/README.txt
+          fi
         '';
 
         # Ensure /bin/start.sh is present by explicitly symlinking it
