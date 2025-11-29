@@ -216,6 +216,9 @@
             dotenvx
             awscli2
             infisical
+            podman
+            skopeo
+            shadow  # provides newuidmap/newgidmap for rootless containers
           ];
 
           shellHook = ''
