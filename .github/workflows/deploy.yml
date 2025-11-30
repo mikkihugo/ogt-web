@@ -74,6 +74,6 @@ jobs:
 
           # Deploy the AMD64 image we just built and pushed
           # The tag is based on the commit SHA (first 8 chars)
-          TAG=$(echo $GITHUB_SHA | cut -c1-8)
+          TAG="$(echo $GITHUB_SHA | cut -c1-8)-amd64"
           echo "Deploying AMD64 image: registry.fly.io/ogt-web:$TAG"
           flyctl deploy --image registry.fly.io/ogt-web:$TAG --remote-only
