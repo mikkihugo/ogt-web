@@ -1,11 +1,12 @@
 [mysqld]
-# Local-only MariaDB: no network, unix socket only (override at runtime if needed)
+# MariaDB base config - networking controlled by runtime.cnf
 binlog_format=ROW
 default-storage-engine=innodb
 innodb_autoinc_lock_mode=2
-skip-networking=ON
 socket=/run/mysqld/mysqld.sock
-bind-address=127.0.0.1
-log_error=/dev/stderr
-wsrep_on=OFF
-wsrep_provider=none
+# log_error is set to console by mariadbd-safe when not specified
+# Note: bind-address, port, skip-networking are set in /etc/my.cnf.d/runtime.cnf
+# wsrep settings are also set in runtime.cnf based on ENABLE_GALERA env var
+
+[mariadbd-safe]
+skip_log_error

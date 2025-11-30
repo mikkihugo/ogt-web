@@ -98,10 +98,39 @@
         };
 
         # =====================================================================
+        # Static busybox for container entrypoint (no dynamic linker needed)
+        # Copy the actual binary to /bin/busybox to avoid broken symlinks
+        # =====================================================================
+        staticBusyboxBin = pkgs.runCommand "busybox-bin" {} ''
+          mkdir -p $out/bin
+          cp ${pkgs.pkgsStatic.busybox}/bin/busybox $out/bin/busybox
+          chmod +x $out/bin/busybox
+          # Also create ash symlink (don't create /bin/sh - bash provides that)
+          ln -s busybox $out/bin/ash
+        '';
+        staticBusybox = pkgs.pkgsStatic.busybox;
+
+        # Create a root filesystem layer with /bin/ at the actual root
+        # This is needed because nix2container copyToRoot places things under /nix/store
+        fhsLayer = pkgs.runCommand "fhs-layer" {} ''
+          mkdir -p $out/bin
+          mkdir -p $out/lib64
+          # Copy static busybox directly to /bin/
+          cp ${pkgs.pkgsStatic.busybox}/bin/busybox $out/bin/busybox
+          chmod +x $out/bin/busybox
+          ln -s busybox $out/bin/ash
+          # Create start.sh script that uses busybox ash
+          echo '#!/bin/busybox ash' > $out/bin/start.sh
+          tail -n +2 ${./docker/start.sh} >> $out/bin/start.sh
+          chmod +x $out/bin/start.sh
+          # Copy glibc dynamic linker for other binaries
+          ln -s ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 $out/lib64/ld-linux-x86-64.so.2
+        '';
+
+        # =====================================================================
         # Runtime dependencies
         # =====================================================================
         runtimePkgs = with pkgs; [
-          busybox
           coreutils
           bash
           gnugrep
@@ -130,15 +159,24 @@
         # =====================================================================
         # Container root filesystem
         # =====================================================================
-        # Create start.sh script directly in /bin/start.sh
-        # Fixed: use runCommand instead of writeShellScriptBin for nix2container compatibility
+        # Create start.sh script with static busybox shebang (no dynamic linker needed)
         startScript = pkgs.runCommand "start-script" {} ''
           mkdir -p $out/bin
-          cp ${./docker/start.sh} $out/bin/start.sh
+          # Use static busybox ash as interpreter - works without /lib64/ld-linux
+          echo '#!${staticBusybox}/bin/ash' > $out/bin/start.sh
+          # Append the rest of the script (skip the original shebang line)
+          tail -n +2 ${./docker/start.sh} >> $out/bin/start.sh
           chmod +x $out/bin/start.sh
         '';
 
+        # FHS compatibility symlinks (required for /bin/bash shebang to work)
+        fhsCompat = pkgs.runCommand "fhs-compat" {} ''
+          mkdir -p $out/lib64
+          ln -s ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 $out/lib64/ld-linux-x86-64.so.2
+        '';
+
         # Merge all runtime dependencies
+        # Note: busybox and start.sh are provided by fhsLayer which places them at /bin/ root
         rootEnv = pkgs.buildEnv {
           name = "root";
           paths = runtimePkgs ++ servicePkgs ++ [
@@ -148,7 +186,7 @@
             caddyConfig
             supervisordConfig
             magentoTheme
-            startScript
+            # startScript and staticBusyboxBin removed - provided by fhsLayer at actual /bin/
           ];
           pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
         };
@@ -237,14 +275,14 @@
             n2c.buildImage {
             name = "registry.fly.io/ogt-web";
             # Use an explicit amd64 suffix to avoid tag collisions with local arm builds
-            tag = "${builtins.substring 0 8 (self.rev or "dev")}-amd64";
-            # Flatten to a single layer to avoid cross-layer symlink issues with /bin/start.sh
-            maxLayers = 1;
-            copyToRoot = [ rootEnv magentoCore startScript ];
+            tag = "v8-fhs";
+            # Use multiple layers for better caching
+            maxLayers = 100;
+            # fhsLayer provides /bin/busybox at the actual root filesystem
+            copyToRoot = [ rootEnv magentoCore fhsLayer ];
             config = {
-              # Default command: use the merged /bin path in the image root to avoid
-              # referencing a GC'd Nix store path at runtime.
-              Cmd = [ "/bin/start.sh" ];
+              # Use full nix store paths - copyToRoot does NOT strip the prefix
+              Cmd = [ "${fhsLayer}/bin/busybox" "ash" "${fhsLayer}/bin/start.sh" ];
               # Environment variables (OCI spec capitalization)
               Env = [
                 "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"

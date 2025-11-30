@@ -1,0 +1,23 @@
+{
+  "name": "msgnet/sex-toys-catalog",
+  "description": "Sex Toys Product Catalog extension with custom attributes and import functionality",
+  "type": "magento2-module",
+  "version": "0.0.1",
+  "require": {
+    "php": ">=7.4",
+    "magento/framework": ">=102.0"
+  },
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "Sex_Toys_Catalog\\": ""
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Sex_Toys_Catalog\\Test\\": "Test/"
+    }
+  }
+}

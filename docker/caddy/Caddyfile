@@ -12,8 +12,8 @@
 		respond "OK" 200
 	}
 
-	# Serve Magento via PHP-FPM over unix socket
-	php_fastcgi unix//run/php-fpm.sock {
+	# Serve Magento via PHP-FPM over TCP
+	php_fastcgi 127.0.0.1:9000 {
 		try_files {path} {path}/ /index.php
 	}
 

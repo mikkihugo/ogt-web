@@ -4,7 +4,12 @@
 #
 
 app = 'ogt-web'
-primary_region = 'arn'
+primary_region = 'fra'
+
+[build]
+  [build.args]
+    COMPOSER_MAGENTO_USERNAME = "54bddfcfbf23c8f911e63299c075fe8e"
+    COMPOSER_MAGENTO_PASSWORD = "ed83d4482210b15bd2c469597c34491a"
 
 [env]
   SITE_ENV = 'production'
@@ -15,6 +20,10 @@ primary_region = 'arn'
   source = 'magento_data'
   destination = '/var/lib/mysql'
 
+# Note: Fly.io only supports 1 volume per machine.
+# Media files are stored in /var/lib/mysql/media and symlinked to /var/www/html/pub/media
+# The magento_web volume is unused; delete it if not needed.
+
 [http_service]
   internal_port = 8080
   force_https = true
@@ -24,16 +33,29 @@ primary_region = 'arn'
   processes = ['app']
 
   [[http_service.checks]]
-    interval = '30s'
-    timeout = '5s'
-    grace_period = '60s'
+    interval = '60s'
+    timeout = '10s'
+    grace_period = '900s'
     method = 'GET'
     path = '/health'
 
 [[vm]]
   cpu_kind = 'shared'
   cpus = 2
-  memory_mb = 2048
+  memory_mb = 4096
+
+[processes]
+  app = "/start.sh"
+
+[checks]
+  [checks.magento_init]
+    port = 8080
+    type = "http"
+    interval = "60s"
+    timeout = "10s"
+    grace_period = "900s"
+    method = "GET"
+    path = "/health"
 
 [[metrics]]
   port = 9104
