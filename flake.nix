@@ -131,6 +131,7 @@
         # Container root filesystem
         # =====================================================================
         # Create start.sh script directly in /bin/start.sh
+        # Fixed: use runCommand instead of writeShellScriptBin for nix2container compatibility
         startScript = pkgs.runCommand "start-script" {} ''
           mkdir -p $out/bin
           cp ${./docker/start.sh} $out/bin/start.sh
