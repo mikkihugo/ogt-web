@@ -130,8 +130,12 @@
         # =====================================================================
         # Container root filesystem
         # =====================================================================
-        # Create start.sh script at /bin/start.sh using writeShellScriptBin
-        startScript = pkgs.writeShellScriptBin "start.sh" (builtins.readFile ./docker/start.sh);
+        # Create start.sh script directly in /bin/start.sh
+        startScript = pkgs.runCommand "start-script" {} ''
+          mkdir -p $out/bin
+          cp ${./docker/start.sh} $out/bin/start.sh
+          chmod +x $out/bin/start.sh
+        '';
 
         # Merge all runtime dependencies
         rootEnv = pkgs.buildEnv {
