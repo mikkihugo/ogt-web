@@ -232,7 +232,9 @@
           # nix2container Image (RECOMMENDED)
           # Streams layers directly to registry - no docker daemon needed
           # -------------------------------------------------------------------
-          container = n2c.buildImage {
+          # Enforce x86_64-linux for Fly image builds to prevent accidental arm pushes
+          container = assert pkgs.stdenv.hostPlatform.system == "x86_64-linux";
+            n2c.buildImage {
             name = "registry.fly.io/ogt-web";
             # Use an explicit amd64 suffix to avoid tag collisions with local arm builds
             tag = "${builtins.substring 0 8 (self.rev or "dev")}-amd64";
