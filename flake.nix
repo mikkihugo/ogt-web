@@ -302,6 +302,21 @@
             echo "  fly logs --follow       # Monitor"
             echo ""
             echo "Secrets are managed via git-crypt and .env.encrypted only."
+
+            # Auto-unlock git-crypt using private gist if gh is authenticated
+            if command -v gh >/dev/null 2>&1 && command -v git-crypt >/dev/null 2>&1; then
+              if gh auth status >/dev/null 2>&1; then
+                KEY_TMP="$(mktemp)"
+                if gh gist view ee80dfac1a1d7857909abc51294f8959 --raw > "$KEY_TMP" 2>/dev/null; then
+                  chmod 600 "$KEY_TMP"
+                  base64 -d "$KEY_TMP" > "$KEY_TMP.dec" 2>/dev/null && mv "$KEY_TMP.dec" "$KEY_TMP"
+                  if git-crypt unlock "$KEY_TMP" >/dev/null 2>&1; then
+                    echo "🔓 git-crypt unlocked from gist key"
+                  fi
+                  rm -f "$KEY_TMP" "$KEY_TMP.dec" 2>/dev/null || true
+                fi
+              fi
+            fi
           '';
         };
 
