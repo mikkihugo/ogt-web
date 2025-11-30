@@ -236,7 +236,7 @@
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
-            copyToRoot = [ rootEnv magentoCore startScript ];
+            copyToRoot = [ rootEnv magentoCore ];
             config = {
               # Default command: use the merged /bin path in the image root to avoid
               # referencing a GC'd Nix store path at runtime.
