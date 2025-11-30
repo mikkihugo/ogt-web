@@ -148,6 +148,7 @@
             caddyConfig
             supervisordConfig
             magentoTheme
+            startScript
           ];
           pathsToLink = [ "/bin" "/lib" "/share" "/etc" "/tmp" ];
         };
