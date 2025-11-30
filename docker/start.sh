@@ -3,6 +3,31 @@ set -euo pipefail
 
 echo "Starting ogt-web (hyperconverged: MariaDB + Redis + PHP-FPM + Caddy)..."
 
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "ERROR: Required command '$1' not found in PATH" >&2
+    exit 1
+  fi
+}
+
+require_file() {
+  if [ ! -f "$1" ]; then
+    echo "ERROR: Required file '$1' not found" >&2
+    exit 1
+  fi
+}
+
+# Sanity: ensure key binaries and configs exist before proceeding
+require_cmd supervisord
+require_cmd redis-server
+require_cmd mysqld_safe
+require_cmd mysql_install_db
+require_cmd mysqladmin
+require_cmd mysql
+require_cmd redis-cli
+require_file /etc/supervisord.conf
+require_file /etc/caddy/Caddyfile
+
 # 0. Start Redis (local only)
 echo "Starting Redis..."
 redis-server --daemonize yes --port 6379 --loglevel warning
@@ -254,4 +279,3 @@ redis-cli shutdown
 echo "Starting Supervisor..."
 mkdir -p /run/php-fpm
 exec supervisord -c /etc/supervisord.conf
-
