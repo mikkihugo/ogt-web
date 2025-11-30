@@ -254,3 +254,4 @@ redis-cli shutdown
 echo "Starting Supervisor..."
 mkdir -p /run/php-fpm
 exec supervisord -c /etc/supervisord.conf
+
