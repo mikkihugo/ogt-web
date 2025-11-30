@@ -238,8 +238,9 @@
             name = "registry.fly.io/ogt-web";
             # Use an explicit amd64 suffix to avoid tag collisions with local arm builds
             tag = "${builtins.substring 0 8 (self.rev or "dev")}-amd64";
-            maxLayers = 100;
-            copyToRoot = [ rootEnv magentoCore ];
+            # Flatten to a single layer to avoid cross-layer symlink issues with /bin/start.sh
+            maxLayers = 1;
+            copyToRoot = [ rootEnv magentoCore startScript ];
             config = {
               # Default command: use the merged /bin path in the image root to avoid
               # referencing a GC'd Nix store path at runtime.
