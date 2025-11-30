@@ -140,6 +140,7 @@
             php
             php.packages.composer
             exporters
+            startScript
             caddyConfig
             supervisordConfig
             magentoTheme
@@ -238,7 +239,7 @@
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
-            copyToRoot = [ rootEnv magentoCore startScript ];
+            copyToRoot = [ rootEnv magentoCore ];
             config = {
               # Default command - executes /bin/start.sh from writeShellScriptBin
               Cmd = [ "/bin/start.sh" ];
