@@ -234,7 +234,8 @@
           # -------------------------------------------------------------------
           container = n2c.buildImage {
             name = "registry.fly.io/ogt-web";
-            tag = builtins.substring 0 8 (self.rev or "dev");
+            # Use an explicit amd64 suffix to avoid tag collisions with local arm builds
+            tag = "${builtins.substring 0 8 (self.rev or "dev")}-amd64";
             maxLayers = 100;
             copyToRoot = [ rootEnv magentoCore ];
             config = {
