@@ -1,9 +1,9 @@
 <?php
 namespace Custom\RateLimit\Plugin;
 
-use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\App\CacheInterface;
+use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -23,9 +23,6 @@ class PaymentRateLimitPlugin
     /** @var int Lockout duration in seconds after exceeding limit (15 minutes) */
     const LOCKOUT_DURATION = 900;
 
-    /** @var RequestInterface */
-    protected $request;
-
     /** @var JsonFactory */
     protected $resultJsonFactory;
 
@@ -35,16 +32,19 @@ class PaymentRateLimitPlugin
     /** @var LoggerInterface */
     protected $logger;
 
+    /** @var RemoteAddress */
+    protected $remoteAddress;
+
     public function __construct(
-        RequestInterface $request,
         JsonFactory $resultJsonFactory,
         CacheInterface $cache,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        RemoteAddress $remoteAddress
     ) {
-        $this->request = $request;
         $this->resultJsonFactory = $resultJsonFactory;
         $this->cache = $cache;
         $this->logger = $logger;
+        $this->remoteAddress = $remoteAddress;
     }
 
     /**
@@ -91,30 +91,16 @@ class PaymentRateLimitPlugin
     }
 
     /**
-     * Get client IP address (supports proxies)
+     * Get client IP address using Magento's trusted resolver
      *
      * @return string
      */
     protected function getClientIp(): string
     {
-        // Check for IP behind proxy
-        $headers = [
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_REAL_IP',
-            'HTTP_CLIENT_IP',
-            'REMOTE_ADDR'
-        ];
+        $ip = $this->remoteAddress->getRemoteAddress();
 
-        foreach ($headers as $header) {
-            $ip = $this->request->getServer($header);
-            if ($ip && filter_var($ip, FILTER_VALIDATE_IP)) {
-                // If X-Forwarded-For contains multiple IPs, take the first one
-                if (strpos($ip, ',') !== false) {
-                    $ips = explode(',', $ip);
-                    $ip = trim($ips[0]);
-                }
-                return $ip;
-            }
+        if (is_string($ip) && filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
         }
 
         return '0.0.0.0';

@@ -1,8 +1,8 @@
 {
-  "name": "msgnet/klarna-checkout",
-  "description": "Starter Klarna checkout integration for Magento 2",
+  "name": "custom/rate-limit",
+  "description": "Rate limiting plugin for payment controllers",
   "type": "magento2-module",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "require": {
     "php": ">=7.4",
     "magento/framework": ">=102.0"
@@ -12,12 +12,12 @@
       "registration.php"
     ],
     "psr-4": {
-      "Klarna_Checkout\\": ""
+      "Custom\\RateLimit\\": ""
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Klarna_Checkout\\Test\\": "Test/"
+      "Custom\\RateLimit\\Test\\": "Test/"
     }
   }
 }

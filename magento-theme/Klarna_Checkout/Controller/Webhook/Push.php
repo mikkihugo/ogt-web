@@ -93,15 +93,20 @@ class Push extends Action implements HttpPostActionInterface, CsrfAwareActionInt
                 return $result->setHttpResponseCode(500)->setData(['error' => 'Configuration error']);
             }
 
-            // Validate HMAC signature (if provided by Klarna)
+            // Validate HMAC signature (required)
             $signature = $this->getRequest()->getHeader('Klarna-Signature');
-            if ($signature) {
-                if (!$this->validateHmacSignature($signature, $sharedSecret)) {
-                    $this->logger->error('Klarna webhook: Invalid HMAC signature', [
-                        'klarna_order_id' => $klarnaOrderId
-                    ]);
-                    return $result->setHttpResponseCode(401)->setData(['error' => 'Invalid signature']);
-                }
+            if (!$signature) {
+                $this->logger->warning('Klarna webhook: Missing HMAC signature', [
+                    'klarna_order_id' => $klarnaOrderId
+                ]);
+                return $result->setHttpResponseCode(401)->setData(['error' => 'Missing signature']);
+            }
+
+            if (!$this->validateHmacSignature($signature, $sharedSecret)) {
+                $this->logger->error('Klarna webhook: Invalid HMAC signature', [
+                    'klarna_order_id' => $klarnaOrderId
+                ]);
+                return $result->setHttpResponseCode(401)->setData(['error' => 'Invalid signature']);
             }
 
             $this->logger->info('Klarna webhook: Push received', [
@@ -160,7 +165,17 @@ class Push extends Action implements HttpPostActionInterface, CsrfAwareActionInt
             }
 
             // Acknowledge receipt
-            $this->acknowledgeKlarnaOrder($klarnaOrderId, $sharedSecret);
+            $ackResult = $this->acknowledgeKlarnaOrder($klarnaOrderId, $sharedSecret);
+
+            if (!$ackResult['success']) {
+                $this->logger->error('Klarna webhook: Failed to acknowledge order', [
+                    'klarna_order_id' => $klarnaOrderId,
+                    'http_code' => $ackResult['http_code'] ?? null,
+                    'error' => $ackResult['error'] ?? null
+                ]);
+
+                return $result->setHttpResponseCode(502)->setData(['error' => 'Acknowledgement failed']);
+            }
 
             return $result->setData(['status' => 'received']);
 
@@ -280,8 +295,24 @@ class Push extends Action implements HttpPostActionInterface, CsrfAwareActionInt
             CURLOPT_TIMEOUT => 30,
         ]);
 
-        curl_exec($ch);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        if ($curlError) {
+            return ['success' => false, 'error' => $curlError];
+        }
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return [
+                'success' => false,
+                'http_code' => $httpCode,
+                'response' => $response
+            ];
+        }
+
+        return ['success' => true];
     }
 
     /**
