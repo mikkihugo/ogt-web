@@ -241,8 +241,8 @@
             maxLayers = 100;
             copyToRoot = [ rootEnv magentoCore ];
             config = {
-              # Default command - executes /bin/start.sh from writeShellScriptBin
-              Cmd = [ "/bin/start.sh" ];
+              # Default command - use full Nix store path (nix2container layer isolation)
+              Cmd = [ "${startScript}/bin/start.sh" ];
               # Environment variables (OCI spec capitalization)
               Env = [
                 "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
