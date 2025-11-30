@@ -231,22 +231,15 @@
           # nix2container Image (RECOMMENDED)
           # Streams layers directly to registry - no docker daemon needed
           # -------------------------------------------------------------------
-          # IMPORTANT: nix2container config follows the OCI image spec exactly.
-          # Field names MUST be capitalized (Cmd, Env, ExposedPorts, WorkingDir).
-          # Do NOT use lowercase (cmd, env) or Docker-style (entrypoint) - these will fail.
-          #
-          # Use Cmd (not entrypoint) for the container command. Both set the default
-          # command, but nix2container uses OCI spec naming.
-          #
-          # Reference: https://github.com/nlewo/nix2container/blob/master/examples/nginx.nix
           container = n2c.buildImage {
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
             copyToRoot = [ rootEnv magentoCore startScript ];
             config = {
-              # Default command - use full Nix store path (nix2container layer isolation)
-              Cmd = [ "${startScript}/bin/start.sh" ];
+              # Default command: use the merged /bin path in the image root to avoid
+              # referencing a GC'd Nix store path at runtime.
+              Cmd = [ "/bin/start.sh" ];
               # Environment variables (OCI spec capitalization)
               Env = [
                 "PATH=${pkgs.lib.makeBinPath (runtimePkgs ++ servicePkgs ++ [ php php.packages.composer exporters ])}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
