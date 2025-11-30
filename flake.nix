@@ -239,7 +239,7 @@
             name = "registry.fly.io/ogt-web";
             tag = builtins.substring 0 8 (self.rev or "dev");
             maxLayers = 100;
-            copyToRoot = [ rootEnv magentoCore ];
+            copyToRoot = [ rootEnv magentoCore startScript ];
             config = {
               # Default command - use full Nix store path (nix2container layer isolation)
               Cmd = [ "${startScript}/bin/start.sh" ];
