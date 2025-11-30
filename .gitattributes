@@ -1,4 +1,4 @@
-# Encrypt secrets and env files with git-crypt
-secrets/** filter=git-crypt
-.env.encrypted filter=git-crypt
-../.keys/* filter=git-crypt
+# Encrypt secrets and env files with git-crypt (include diff driver for clean diffs)
+secrets/** filter=git-crypt diff=git-crypt
+.env.encrypted filter=git-crypt diff=git-crypt
+../.keys/* filter=git-crypt diff=git-crypt
