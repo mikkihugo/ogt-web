@@ -1,0 +1,20 @@
+# Storefront - main site
+orgasmtoy.com, www.orgasmtoy.com {
+    reverse_proxy storefront:4321
+    encode gzip
+}
+
+# Medusa API
+api.orgasmtoy.com {
+    reverse_proxy medusa:9000
+    encode gzip
+}
+
+# Medusa Admin
+admin.orgasmtoy.com {
+    reverse_proxy medusa:9000
+    encode gzip
+}
+
+# Keystatic CMS (through storefront)
+# Accessible at orgasmtoy.com/admin/content

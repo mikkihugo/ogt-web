@@ -1,0 +1,30 @@
+# Ignore storefront (built separately)
+storefront/
+
+# Node modules
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# Medusa artifacts
+.medusa/
+
+# Dev/IDE files
+.direnv/
+.claude/
+.roo/
+
+# Deploy configs (not needed in image)
+deploy/
+
+# Docs
+docs/
+*.md
+
+# Other
+*.log
+.env*
+magento-theme/
+chatwoot/
