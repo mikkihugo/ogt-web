@@ -1,0 +1,31 @@
+# FEATURE FLAG: DISABLED
+# Chatwoot unified inbox for social media team messaging
+# To enable: fly apps create ogt-chat && fly postgres create --name ogt-chat-db ...
+# See README for full setup instructions
+
+app = "ogt-chat"
+primary_region = "ams"
+
+[build]
+  image = "chatwoot/chatwoot:latest"
+
+[env]
+  RAILS_ENV = "production"
+  NODE_ENV = "production"
+  RAILS_LOG_TO_STDOUT = "true"
+  LOG_LEVEL = "info"
+  INSTALLATION_ENV = "docker"
+  ENABLE_ACCOUNT_SIGNUP = "false"
+  FRONTEND_URL = "https://ogt-chat.fly.dev"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
