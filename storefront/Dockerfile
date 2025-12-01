@@ -2,6 +2,11 @@
 FROM node:22-slim AS builder
 WORKDIR /app
 
+ARG PUBLIC_MEDUSA_BACKEND_URL=https://api.orgasmtoy.com
+ARG PUBLIC_MEDUSA_PUBLISHABLE_KEY
+ENV PUBLIC_MEDUSA_BACKEND_URL=$PUBLIC_MEDUSA_BACKEND_URL
+ENV PUBLIC_MEDUSA_PUBLISHABLE_KEY=$PUBLIC_MEDUSA_PUBLISHABLE_KEY
+
 # Copy package files
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile

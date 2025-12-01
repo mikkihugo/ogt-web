@@ -13,6 +13,10 @@ module.exports = defineConfig({
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
   },
+  admin: {
+    path: "/app",
+    backendUrl: process.env.MEDUSA_BACKEND_URL || "https://api.orgasmtoy.com",
+  },
   modules: [
     {
       resolve: "@medusajs/medusa/payment",

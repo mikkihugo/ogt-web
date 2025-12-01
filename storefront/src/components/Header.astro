@@ -1,0 +1,128 @@
+---
+const currentPath = Astro.url.pathname;
+---
+
+<header class="bg-gradient-to-r from-rose-100 to-purple-100 sticky top-0 z-50 shadow-sm">
+  <div class="container mx-auto px-4">
+    <nav class="flex items-center justify-between py-4">
+      <a href="/" class="text-2xl font-bold text-gray-900 hover:text-rose-600 transition">
+        Orgasm Toy
+      </a>
+
+      <div class="hidden md:flex items-center gap-8">
+        <a
+          href="/shop"
+          class={`text-gray-700 hover:text-rose-600 transition font-medium ${currentPath.startsWith('/shop') ? 'text-rose-600' : ''}`}
+        >
+          Shop
+        </a>
+        <a
+          href="/blog"
+          class={`text-gray-700 hover:text-rose-600 transition font-medium ${currentPath.startsWith('/blog') ? 'text-rose-600' : ''}`}
+        >
+          Blog
+        </a>
+        <a
+          href="/about"
+          class={`text-gray-700 hover:text-rose-600 transition font-medium ${currentPath === '/about' ? 'text-rose-600' : ''}`}
+        >
+          About
+        </a>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <button
+          id="search-btn"
+          class="p-2 text-gray-700 hover:text-rose-600 transition"
+          aria-label="Search"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+
+        <a
+          href="/cart"
+          class="relative p-2 text-gray-700 hover:text-rose-600 transition"
+          aria-label="Shopping cart"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          <span
+            id="cart-count"
+            class="absolute -top-1 -right-1 bg-rose-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium hidden"
+          >
+            0
+          </span>
+        </a>
+
+        <button
+          id="mobile-menu-btn"
+          class="md:hidden p-2 text-gray-700 hover:text-rose-600 transition"
+          aria-label="Menu"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-rose-200">
+    <div class="container mx-auto px-4 py-4 space-y-3">
+      <a href="/shop" class="block text-gray-700 hover:text-rose-600 transition font-medium">
+        Shop
+      </a>
+      <a href="/blog" class="block text-gray-700 hover:text-rose-600 transition font-medium">
+        Blog
+      </a>
+      <a href="/about" class="block text-gray-700 hover:text-rose-600 transition font-medium">
+        About
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  mobileMenuBtn?.addEventListener('click', () => {
+    mobileMenu?.classList.toggle('hidden');
+  });
+
+  // Update cart count
+  function updateCartCount() {
+    const cartData = localStorage.getItem('cart-storage');
+    if (cartData) {
+      try {
+        const cart = JSON.parse(cartData);
+        const count = cart.items?.length || 0;
+        const cartCountEl = document.getElementById('cart-count');
+        if (cartCountEl) {
+          if (count > 0) {
+            cartCountEl.textContent = count.toString();
+            cartCountEl.classList.remove('hidden');
+          } else {
+            cartCountEl.classList.add('hidden');
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing cart data:', e);
+      }
+    }
+  }
+
+  // Update on page load
+  updateCartCount();
+
+  // Listen for storage changes
+  window.addEventListener('storage', updateCartCount);
+
+  // Listen for custom cart update events
+  window.addEventListener('cart-updated', updateCartCount);
+</script>

@@ -1,0 +1,76 @@
+---
+import { getProductPrice, getProductImage } from '../lib/medusa';
+import type { MedusaProduct } from '../lib/medusa';
+
+interface Props {
+  product: MedusaProduct;
+  featured?: boolean;
+}
+
+const { product, featured = false } = Astro.props;
+const price = getProductPrice(product);
+const image = getProductImage(product);
+---
+
+<div class={`group bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden ${featured ? 'md:col-span-2 md:row-span-2' : ''}`}>
+  <a href={`/shop/${product.handle}`} class="block">
+    <div class={`relative overflow-hidden bg-gray-100 ${featured ? 'h-96' : 'h-64'}`}>
+      <img
+        src={image}
+        alt={product.title}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        loading="lazy"
+      />
+      {product.tags?.some(tag => tag.value.toLowerCase() === 'new') && (
+        <span class="absolute top-3 left-3 bg-rose-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+          NEW
+        </span>
+      )}
+      {product.tags?.some(tag => tag.value.toLowerCase() === 'sale') && (
+        <span class="absolute top-3 right-3 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+          SALE
+        </span>
+      )}
+    </div>
+
+    <div class="p-4">
+      {product.collection && (
+        <p class="text-xs text-rose-600 font-medium uppercase tracking-wide mb-1">
+          {product.collection.title}
+        </p>
+      )}
+
+      <h3 class={`font-semibold text-gray-900 mb-2 group-hover:text-rose-600 transition-colors ${featured ? 'text-xl' : 'text-base'}`}>
+        {product.title}
+      </h3>
+
+      {product.description && (
+        <p class={`text-gray-600 mb-3 line-clamp-2 ${featured ? 'text-base' : 'text-sm'}`}>
+          {product.description}
+        </p>
+      )}
+
+      <div class="flex items-center justify-between">
+        <span class={`font-bold text-gray-900 ${featured ? 'text-xl' : 'text-lg'}`}>
+          {price}
+        </span>
+
+        <button
+          class="text-rose-600 hover:text-rose-700 font-medium text-sm flex items-center gap-1 group-hover:gap-2 transition-all"
+          aria-label={`View ${product.title}`}
+        >
+          <span>View</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {product.variants && product.variants.length > 1 && (
+        <p class="text-xs text-gray-500 mt-2">
+          {product.variants.length} variants available
+        </p>
+      )}
+    </div>
+  </a>
+</div>

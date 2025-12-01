@@ -1,0 +1,375 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Checkout | Orgasm Toy">
+  <Header />
+
+  <main class="min-h-screen bg-gray-50 py-12">
+    <div class="container mx-auto px-4">
+      <h1 class="text-4xl font-bold text-gray-900 mb-8">Checkout</h1>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Checkout Form -->
+        <div class="lg:col-span-2">
+          <form id="checkout-form" class="space-y-6">
+            <!-- Contact Information -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <h2 class="text-xl font-bold text-gray-900 mb-6">Contact Information</h2>
+
+              <div class="space-y-4">
+                <div>
+                  <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    placeholder="you@example.com"
+                  />
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="newsletter"
+                    name="newsletter"
+                    class="w-4 h-4 text-rose-600 border-gray-300 rounded focus:ring-rose-500"
+                  />
+                  <label for="newsletter" class="text-sm text-gray-600">
+                    Subscribe to our newsletter for exclusive offers
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <h2 class="text-xl font-bold text-gray-900 mb-6">Shipping Address</h2>
+
+              <div class="space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2">
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      required
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      required
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label for="address" class="block text-sm font-medium text-gray-700 mb-2">
+                    Street Address *
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    placeholder="123 Main St"
+                  />
+                </div>
+
+                <div>
+                  <label for="apartment" class="block text-sm font-medium text-gray-700 mb-2">
+                    Apartment, suite, etc. (optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="apartment"
+                    name="apartment"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      id="city"
+                      name="city"
+                      required
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label for="state" class="block text-sm font-medium text-gray-700 mb-2">
+                      State / Province *
+                    </label>
+                    <input
+                      type="text"
+                      id="state"
+                      name="state"
+                      required
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label for="postal" class="block text-sm font-medium text-gray-700 mb-2">
+                      Postal Code *
+                    </label>
+                    <input
+                      type="text"
+                      id="postal"
+                      name="postal"
+                      required
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label for="country" class="block text-sm font-medium text-gray-700 mb-2">
+                    Country *
+                  </label>
+                  <select
+                    id="country"
+                    name="country"
+                    required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  >
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="AU">Australia</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                    Phone (optional)
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <h2 class="text-xl font-bold text-gray-900 mb-6">Payment Method</h2>
+
+              <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-start gap-3">
+                  <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <h3 class="font-medium text-blue-900 mb-2">Demo Checkout</h3>
+                    <p class="text-sm text-blue-800">
+                      This is a demonstration checkout page. Payment processing would be integrated
+                      with the Medusa backend using Stripe, PayPal, or other payment providers.
+                    </p>
+                    <p class="text-sm text-blue-800 mt-2">
+                      In production, you would integrate with Medusa's payment API to handle secure
+                      payment processing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 flex gap-2">
+                <span class="text-xs bg-gray-100 px-3 py-2 rounded border">Visa</span>
+                <span class="text-xs bg-gray-100 px-3 py-2 rounded border">Mastercard</span>
+                <span class="text-xs bg-gray-100 px-3 py-2 rounded border">American Express</span>
+                <span class="text-xs bg-gray-100 px-3 py-2 rounded border">PayPal</span>
+              </div>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+              <div class="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  name="terms"
+                  required
+                  class="w-4 h-4 text-rose-600 border-gray-300 rounded focus:ring-rose-500 mt-1"
+                />
+                <label for="terms" class="text-sm text-gray-600">
+                  I confirm that I am 18 years or older and agree to the
+                  <a href="/terms" class="text-rose-600 hover:underline">Terms of Service</a>
+                  and
+                  <a href="/privacy" class="text-rose-600 hover:underline">Privacy Policy</a>.
+                  I understand that all orders are shipped in discreet packaging.
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
+
+            <div id="checkout-items" class="space-y-4 mb-6 max-h-64 overflow-y-auto">
+              <!-- Items will be rendered here -->
+            </div>
+
+            <div class="border-t pt-4 space-y-3 mb-6">
+              <div class="flex justify-between text-gray-600">
+                <span>Subtotal</span>
+                <span id="checkout-subtotal">$0.00</span>
+              </div>
+              <div class="flex justify-between text-gray-600">
+                <span>Shipping</span>
+                <span>$9.99</span>
+              </div>
+              <div class="flex justify-between text-gray-600">
+                <span>Tax</span>
+                <span id="checkout-tax">$0.00</span>
+              </div>
+              <div class="border-t pt-3 flex justify-between font-bold text-lg">
+                <span>Total</span>
+                <span id="checkout-total">$0.00</span>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              form="checkout-form"
+              class="w-full bg-rose-600 text-white px-8 py-4 rounded-full font-medium hover:bg-rose-700 transition shadow-lg hover:shadow-xl mb-4"
+            >
+              Complete Order
+            </button>
+
+            <div class="text-center text-sm text-gray-600">
+              <svg class="w-5 h-5 inline-block text-green-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              Secure SSL Encrypted Checkout
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+
+  <script is:inline>
+    function renderCheckoutSummary() {
+      const cartData = localStorage.getItem('cart-storage');
+      const cart = cartData ? JSON.parse(cartData) : { items: [] };
+      const itemsEl = document.getElementById('checkout-items');
+
+      if (!cart.items || cart.items.length === 0) {
+        window.location.href = '/cart';
+        return;
+      }
+
+      let html = '';
+      let subtotal = 0;
+
+      cart.items.forEach((item) => {
+        const itemTotal = item.price * item.quantity;
+        subtotal += itemTotal;
+
+        const formattedTotal = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+        }).format(itemTotal / 100);
+
+        html += `
+          <div class="flex gap-3">
+            <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+              <img
+                src="${item.image || '/placeholder-product.jpg'}"
+                alt="${item.title}"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div class="flex-1">
+              <h3 class="font-medium text-sm text-gray-900">${item.title}</h3>
+              ${item.variantTitle ? `<p class="text-xs text-gray-600">${item.variantTitle}</p>` : ''}
+              <p class="text-sm text-gray-600">Qty: ${item.quantity}</p>
+            </div>
+            <div class="text-sm font-medium text-gray-900">${formattedTotal}</div>
+          </div>
+        `;
+      });
+
+      itemsEl.innerHTML = html;
+
+      const shipping = 999; // $9.99 in cents
+      const tax = Math.round(subtotal * 0.1); // 10% tax
+      const total = subtotal + shipping + tax;
+
+      const formatCurrency = (amount) =>
+        new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+        }).format(amount / 100);
+
+      document.getElementById('checkout-subtotal').textContent = formatCurrency(subtotal);
+      document.getElementById('checkout-tax').textContent = formatCurrency(tax);
+      document.getElementById('checkout-total').textContent = formatCurrency(total);
+    }
+
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+
+      // In a real implementation, this would:
+      // 1. Create or update Medusa cart with shipping address
+      // 2. Initialize payment session
+      // 3. Process payment
+      // 4. Complete cart to create order
+
+      console.log('Checkout data:', data);
+
+      alert('This is a demo checkout. In production, this would process the order through Medusa\'s backend API.');
+
+      // Clear cart after successful order
+      localStorage.removeItem('cart-storage');
+      window.dispatchEvent(new CustomEvent('cart-updated'));
+
+      // Redirect to success page
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    });
+
+    // Initial render
+    renderCheckoutSummary();
+  </script>
+</Layout>
