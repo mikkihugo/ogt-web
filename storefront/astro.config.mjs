@@ -14,5 +14,9 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()]
   },
-  integrations: [react(), keystatic()]
+  integrations: [
+    react(),
+    // Keystatic routes manually configured at /admin/content
+    // No auto-routes - we use custom pages
+  ]
 });

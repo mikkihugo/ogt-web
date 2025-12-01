@@ -4,6 +4,12 @@ export default config({
   storage: {
     kind: 'local',
   },
+  ui: {
+    brand: { name: 'Orgasm Toy Content' },
+    navigation: {
+      Content: ['posts', 'pages'],
+    },
+  },
   collections: {
     posts: collection({
       label: 'Blog Posts',

@@ -24,10 +24,10 @@ module.exports = defineConfig({
             options: {
               apiKey: process.env.STRIPE_API_KEY,
               webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-              // Enable Klarna, Apple Pay, Google Pay through Stripe
+              // Stripe handles card payments, Apple Pay, Google Pay
+              // Klarna will be added separately with direct integration
               paymentMethodTypes: [
                 "card",
-                "klarna",
                 "apple_pay",
                 "google_pay",
               ],
