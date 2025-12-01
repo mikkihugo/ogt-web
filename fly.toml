@@ -1,31 +1,18 @@
-# fly.toml app configuration file generated for ogt-web on 2025-11-27T19:10:12+01:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
+# fly.toml - Medusa.js e-commerce backend on Fly.io
+# https://fly.io/docs/reference/configuration/
 
 app = 'ogt-web'
 primary_region = 'fra'
 
 [build]
-  [build.args]
-    COMPOSER_MAGENTO_USERNAME = "54bddfcfbf23c8f911e63299c075fe8e"
-    COMPOSER_MAGENTO_PASSWORD = "ed83d4482210b15bd2c469597c34491a"
+  # Uses Dockerfile
 
 [env]
-  SITE_ENV = 'production'
-  ENABLE_GALERA = 'false'
-  SITE_NAME = 'orgasmtoy.com'
-
-[[mounts]]
-  source = 'magento_data'
-  destination = '/var/lib/mysql'
-
-# Note: Fly.io only supports 1 volume per machine.
-# Media files are stored in /var/lib/mysql/media and symlinked to /var/www/html/pub/media
-# The magento_web volume is unused; delete it if not needed.
+  NODE_ENV = 'production'
+  PORT = '9000'
 
 [http_service]
-  internal_port = 8080
+  internal_port = 9000
   force_https = true
   auto_stop_machines = 'off'
   auto_start_machines = true
@@ -33,42 +20,16 @@ primary_region = 'fra'
   processes = ['app']
 
   [[http_service.checks]]
-    interval = '60s'
-    timeout = '10s'
-    grace_period = '900s'
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '60s'
     method = 'GET'
     path = '/health'
 
 [[vm]]
   cpu_kind = 'shared'
-  cpus = 2
-  memory_mb = 4096
+  cpus = 1
+  memory_mb = 512
 
 [processes]
-  app = "/start.sh"
-
-[checks]
-  [checks.magento_init]
-    port = 8080
-    type = "http"
-    interval = "60s"
-    timeout = "10s"
-    grace_period = "900s"
-    method = "GET"
-    path = "/health"
-
-[[metrics]]
-  port = 9104
-  path = '/metrics'
-
-[[metrics]]
-  port = 9121
-  path = '/metrics'
-
-[[metrics]]
-  port = 9253
-  path = '/metrics'
-
-[[metrics]]
-  port = 8081
-  path = '/metrics'
+  app = "yarn start"

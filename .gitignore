@@ -3,13 +3,23 @@
 .env.local
 .env.*.local
 
-# Magento specific
-var/
-pub/media/catalog/
-pub/static/
-generated/
-vendor/
-node_modules/
+# Medusa specific
+/dist
+/uploads
+/node_modules
+.medusa
+medusa-db.sql
+build
+.cache
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+yarn-error.log
 
 # IDE
 .idea/
@@ -30,14 +40,12 @@ yarn-error.log*
 
 # Build artifacts
 dist/
-build/
 *.tar.gz
 *.zip
 
 # Temporary files
 tmp/
 temp/
-.cache/
 .direnv/
 .claude/
 
@@ -45,6 +53,9 @@ temp/
 .fly/
 fly.toml.bak
 
-# Configuration with secrets
-momento2-site/config.js
+# Test coverage
+coverage
+
+# TypeScript
+./tsconfig.tsbuildinfo
 result

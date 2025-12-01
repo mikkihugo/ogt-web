@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<acl xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
-  <resources>
-    <resource id="Magento_Backend::admin">
-      <resource id="Klarna_Checkout::config" title="Klarna Checkout Configuration" sortOrder="900" />
-    </resource>
-  </resources>
-</acl>
