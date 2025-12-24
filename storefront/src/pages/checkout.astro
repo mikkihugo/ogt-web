@@ -284,28 +284,28 @@ import Footer from '../components/Footer.astro';
 
   <Footer />
 
-  <script is:inline>
+  <script>
+    import { $localCart, $cartTotal, updateCart, completeCart, syncWithMedusa } from '../stores/cart';
+    import { formatPrice } from '../lib/medusa';
+
     function renderCheckoutSummary() {
-      const cartData = localStorage.getItem('cart-storage');
-      const cart = cartData ? JSON.parse(cartData) : { items: [] };
+      const cart = $localCart.get();
       const itemsEl = document.getElementById('checkout-items');
 
+      if (!itemsEl) return;
+
       if (!cart.items || cart.items.length === 0) {
-        window.location.href = '/cart';
+        // Only redirect if we're not on the success page (if we added one)
+        if (window.location.pathname === '/checkout') {
+          window.location.href = '/cart';
+        }
         return;
       }
 
       let html = '';
-      let subtotal = 0;
-
       cart.items.forEach((item) => {
         const itemTotal = item.price * item.quantity;
-        subtotal += itemTotal;
-
-        const formattedTotal = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        }).format(itemTotal / 100);
+        const formattedTotal = formatPrice(itemTotal);
 
         html += `
           <div class="flex gap-3">
@@ -327,49 +327,75 @@ import Footer from '../components/Footer.astro';
       });
 
       itemsEl.innerHTML = html;
-
-      const shipping = 999; // $9.99 in cents
-      const tax = Math.round(subtotal * 0.1); // 10% tax
-      const total = subtotal + shipping + tax;
-
-      const formatCurrency = (amount) =>
-        new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        }).format(amount / 100);
-
-      document.getElementById('checkout-subtotal').textContent = formatCurrency(subtotal);
-      document.getElementById('checkout-tax').textContent = formatCurrency(tax);
-      document.getElementById('checkout-total').textContent = formatCurrency(total);
     }
 
-    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+    function updateSummary(subtotal: number) {
+      const shipping = 999; // $9.99 in cents (mocked)
+      const tax = Math.round(subtotal * 0.1); // 10% tax (mocked)
+      const total = subtotal + shipping + tax;
+
+      const subtotalEl = document.getElementById('checkout-subtotal');
+      const taxEl = document.getElementById('checkout-tax');
+      const totalEl = document.getElementById('checkout-total');
+
+      if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+      if (taxEl) taxEl.textContent = formatPrice(tax);
+      if (totalEl) totalEl.textContent = formatPrice(total);
+    }
+
+    document.getElementById('checkout-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const formData = new FormData(e.target);
+      const form = e.target as HTMLFormElement;
+      const formData = new FormData(form);
       const data = Object.fromEntries(formData);
 
-      // In a real implementation, this would:
-      // 1. Create or update Medusa cart with shipping address
-      // 2. Initialize payment session
-      // 3. Process payment
-      // 4. Complete cart to create order
+      const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
 
-      console.log('Checkout data:', data);
+      try {
+        // 1. Update Medusa cart with shipping address and email
+        await updateCart({
+          email: data.email as string,
+          shipping_address: {
+            first_name: data.firstName as string,
+            last_name: data.lastName as string,
+            address_1: data.address as string,
+            address_2: data.apartment as string,
+            city: data.city as string,
+            province: data.state as string,
+            postal_code: data.postal as string,
+            country_code: (data.country as string).toLowerCase(),
+            phone: data.phone as string,
+          }
+        });
 
-      alert('This is a demo checkout. In production, this would process the order through Medusa\'s backend API.');
+        // 2. Complete order (in this simple flow, we assume payment is handled or mocked)
+        await completeCart();
 
-      // Clear cart after successful order
-      localStorage.removeItem('cart-storage');
-      window.dispatchEvent(new CustomEvent('cart-updated'));
-
-      // Redirect to success page
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 2000);
+        window.location.href = '/order-success';
+      } catch (error) {
+        console.error('Checkout error:', error);
+        alert('There was an error processing your order. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     });
 
-    // Initial render
-    renderCheckoutSummary();
+    // Subscribe to stores
+    $localCart.subscribe(() => {
+      renderCheckoutSummary();
+    });
+
+    $cartTotal.subscribe((total) => {
+      updateSummary(total);
+    });
+
+    // Initial sync and render
+    syncWithMedusa().then(() => {
+      renderCheckoutSummary();
+    });
   </script>
 </Layout>

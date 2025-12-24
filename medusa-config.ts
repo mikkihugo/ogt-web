@@ -26,8 +26,8 @@ module.exports = defineConfig({
             resolve: "@medusajs/payment-stripe",
             id: "stripe",
             options: {
-              apiKey: process.env.STRIPE_API_KEY,
-              webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+              apiKey: process.env.STRIPE_API_KEY || "sk_test_unused",
+              webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "whsec_unused",
               // Stripe handles card payments, Apple Pay, Google Pay
               // Klarna will be added separately with direct integration
               paymentMethodTypes: [
@@ -39,6 +39,9 @@ module.exports = defineConfig({
           },
         ],
       },
+    },
+    {
+      resolve: "./src/modules/blog",
     },
   ],
 })

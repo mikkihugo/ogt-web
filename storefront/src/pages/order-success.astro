@@ -1,0 +1,61 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Order Successful | Orgasm Toy">
+  <Header />
+
+  <main class="min-h-screen bg-gray-50 flex items-center justify-center py-12">
+    <div class="container mx-auto px-4">
+      <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-sm p-12 text-center border border-green-100">
+        <div class="w-24 h-24 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+          <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Order Successful!</h1>
+        <p class="text-xl text-gray-600 mb-8">
+          Thank you for your purchase. We've received your order and are processing it with care.
+        </p>
+
+        <div class="bg-gray-50 rounded-lg p-6 mb-8 text-left">
+          <h2 class="font-semibold text-gray-900 mb-2">What Happens Next?</h2>
+          <ul class="space-y-3 text-gray-600 text-sm">
+            <li class="flex items-start gap-3">
+              <span class="text-green-600 mt-0.5">✔</span>
+              <span>An order confirmation has been sent to your email.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-green-600 mt-0.5">✔</span>
+              <span>Your order will be shipped in discreet packaging within 24-48 hours.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="text-green-600 mt-0.5">✔</span>
+              <span>You'll receive a tracking number once your package is on its way.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a
+            href="/shop"
+            class="inline-block bg-rose-600 text-white px-8 py-3 rounded-full font-medium hover:bg-rose-700 transition shadow-lg"
+          >
+            Continue Shopping
+          </a>
+          <a
+            href="/"
+            class="inline-block bg-white text-gray-700 px-8 py-3 rounded-full font-medium border border-gray-300 hover:bg-gray-50 transition"
+          >
+            Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

@@ -20,9 +20,11 @@ let totalCount = 0;
 let error = null;
 
 try {
+  const { salesChannelIds } = Astro.locals;
   const params: any = { limit, offset };
   if (searchQuery) params.q = searchQuery;
   if (category) params.category_id = category;
+  if (salesChannelIds?.length) params.sales_channel_id = salesChannelIds[0];
 
   const response = await medusaClient.getProducts(params);
   products = response.products;

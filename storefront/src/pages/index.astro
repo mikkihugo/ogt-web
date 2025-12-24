@@ -23,25 +23,40 @@ try {
 
   <main>
     <!-- Hero Section -->
-    <section class="bg-gradient-to-br from-rose-50 via-purple-50 to-pink-50 py-20">
-      <div class="container mx-auto px-4 text-center">
-        <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+    <section class="relative h-[80vh] flex items-center justify-center overflow-hidden">
+      <!-- Background Video -->
+      <div class="absolute inset-0 z-0">
+        <video
+          autoplay
+          muted
+          loop
+          playsinline
+          class="w-full h-full object-cover"
+        >
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+        <!-- Darker Overlay for better contrast -->
+        <div class="absolute inset-0 bg-black/40"></div>
+      </div>
+
+      <div class="container mx-auto px-4 text-center relative z-10">
+        <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-2xl">
           Discover Your Pleasure
         </h1>
-        <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+        <p class="text-xl md:text-2xl text-rose-50 mb-8 max-w-2xl mx-auto drop-shadow-lg">
           Premium wellness and intimacy products curated for your journey of self-discovery.
           Body-safe materials, discreet shipping.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <a
             href="/shop"
-            class="inline-block bg-rose-600 text-white px-8 py-4 rounded-full font-medium hover:bg-rose-700 transition shadow-lg hover:shadow-xl"
+            class="inline-block bg-rose-600 text-white px-8 py-4 rounded-full font-medium hover:bg-rose-700 transition shadow-lg hover:shadow-xl hover:scale-105"
           >
             Explore Collection
           </a>
           <a
             href="/blog"
-            class="inline-block bg-white text-rose-600 px-8 py-4 rounded-full font-medium hover:bg-gray-50 transition shadow-lg hover:shadow-xl"
+            class="inline-block bg-white/90 backdrop-blur-sm text-gray-900 px-8 py-4 rounded-full font-medium hover:bg-white transition shadow-lg hover:shadow-xl hover:scale-105"
           >
             Read Our Guides
           </a>

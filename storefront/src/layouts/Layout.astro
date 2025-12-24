@@ -7,10 +7,11 @@ interface Props {
 }
 
 const { title = 'Orgasm Toy', description = 'Premium wellness and pleasure products - orgasmtoy.com' } = Astro.props;
+const { theme = 'theme-lux', locale = 'en-US' } = Astro.locals;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={locale} data-theme={theme}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

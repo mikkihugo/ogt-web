@@ -87,6 +87,8 @@ const currentPath = Astro.url.pathname;
 </header>
 
 <script>
+  import { $cartCount } from '../stores/cart';
+
   // Mobile menu toggle
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');
@@ -95,34 +97,16 @@ const currentPath = Astro.url.pathname;
     mobileMenu?.classList.toggle('hidden');
   });
 
-  // Update cart count
-  function updateCartCount() {
-    const cartData = localStorage.getItem('cart-storage');
-    if (cartData) {
-      try {
-        const cart = JSON.parse(cartData);
-        const count = cart.items?.length || 0;
-        const cartCountEl = document.getElementById('cart-count');
-        if (cartCountEl) {
-          if (count > 0) {
-            cartCountEl.textContent = count.toString();
-            cartCountEl.classList.remove('hidden');
-          } else {
-            cartCountEl.classList.add('hidden');
-          }
-        }
-      } catch (e) {
-        console.error('Error parsing cart data:', e);
+  // Update cart count reactively
+  const cartCountEl = document.getElementById('cart-count');
+  if (cartCountEl) {
+    $cartCount.subscribe((count) => {
+      if (count > 0) {
+        cartCountEl.textContent = count.toString();
+        cartCountEl.classList.remove('hidden');
+      } else {
+        cartCountEl.classList.add('hidden');
       }
-    }
+    });
   }
-
-  // Update on page load
-  updateCartCount();
-
-  // Listen for storage changes
-  window.addEventListener('storage', updateCartCount);
-
-  // Listen for custom cart update events
-  window.addEventListener('cart-updated', updateCartCount);
 </script>

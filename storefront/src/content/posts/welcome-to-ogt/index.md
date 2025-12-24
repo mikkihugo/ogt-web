@@ -1,3 +1,11 @@
+---
+title: Welcome to OGT
+publishedDate: 2023-12-23
+excerpt: Discover the mission and values of OGT Store, your destination for premium wellness and pleasure products.
+category: news
+featuredImage: /assets/posts/welcome.jpg
+---
+
 Welcome to OGT Store, your destination for premium wellness and pleasure products.
 
 ## Our Mission

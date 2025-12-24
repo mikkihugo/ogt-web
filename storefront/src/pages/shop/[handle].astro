@@ -213,6 +213,7 @@ const images = product?.images || [];
                 id="add-to-cart-btn"
                 class="w-full bg-rose-600 text-white px-8 py-4 rounded-full font-medium hover:bg-rose-700 transition shadow-lg hover:shadow-xl mb-4"
                 onclick="addToCart()"
+                data-product-id={product.id}
               >
                 Add to Cart
               </button>
@@ -270,10 +271,13 @@ const images = product?.images || [];
 
   <Footer />
 
-  <script is:inline define:vars={{ productTitle: product?.title, productId: product?.id, productImage: mainImage }}>
-    let selectedVariantId = document.querySelector('.variant-btn')?.dataset?.variantId || '';
+  <script>
+    import { addToCart } from '../../stores/cart';
+    
+    let selectedVariantId = (document.querySelector('.variant-btn') as HTMLElement)?.dataset?.variantId || '';
 
-    function selectVariant(btn) {
+    // @ts-ignore
+    window.selectVariant = function(btn: HTMLElement) {
       // Update selected state
       document.querySelectorAll('.variant-btn').forEach((b) => {
         b.classList.remove('border-rose-600', 'bg-rose-50');
@@ -283,7 +287,7 @@ const images = product?.images || [];
       btn.classList.add('border-rose-600', 'bg-rose-50');
 
       // Update selected variant
-      selectedVariantId = btn.dataset.variantId;
+      selectedVariantId = btn.dataset.variantId || '';
 
       // Update price display
       const price = btn.dataset.price;
@@ -294,61 +298,54 @@ const images = product?.images || [];
           currency: currency.toUpperCase(),
         }).format(parseInt(price) / 100);
 
-        document.querySelector('.text-3xl.font-bold.text-gray-900').textContent = formatted;
+        const priceEl = document.querySelector('.text-3xl.font-bold.text-gray-900');
+        if (priceEl) priceEl.textContent = formatted;
       }
     }
 
-    function updateQuantity(delta) {
-      const input = document.getElementById('quantity');
+    // @ts-ignore
+    window.updateQuantity = function(delta: number) {
+      const input = document.getElementById('quantity') as HTMLInputElement;
       const currentValue = parseInt(input.value) || 1;
       const newValue = Math.max(1, Math.min(10, currentValue + delta));
-      input.value = newValue;
+      input.value = newValue.toString();
     }
 
-    async function addToCart() {
-      const quantity = parseInt(document.getElementById('quantity').value) || 1;
-      const variantId = selectedVariantId || document.querySelector('.variant-btn')?.dataset?.variantId;
+    // @ts-ignore
+    window.addToCart = async function() {
+      const quantityInput = document.getElementById('quantity') as HTMLInputElement;
+      const quantity = parseInt(quantityInput.value) || 1;
+      const variantId = selectedVariantId || (document.querySelector('.variant-btn') as HTMLElement)?.dataset?.variantId;
 
       if (!variantId) {
         alert('Please select a variant');
         return;
       }
 
-      const btn = document.getElementById('add-to-cart-btn');
+      const btn = document.getElementById('add-to-cart-btn') as HTMLButtonElement;
       const originalText = btn.textContent;
       btn.disabled = true;
       btn.textContent = 'Adding...';
 
       try {
         // Get variant price
-        const variantBtn = document.querySelector(`[data-variant-id="${variantId}"]`);
+        const variantBtn = document.querySelector(`[data-variant-id="${variantId}"]`) as HTMLElement;
         const price = parseInt(variantBtn?.dataset?.price || '0');
+        const title = (document.querySelector('h1') as HTMLElement).textContent || '';
+        const variantTitle = variantBtn?.querySelector('.font-medium')?.textContent || '';
+        const productId = (btn as any).dataset.productId; // We need this from props/server
+        const productImage = (document.getElementById('main-image') as HTMLImageElement).src;
 
-        // Add to local storage cart
-        const cartData = localStorage.getItem('cart-storage');
-        const cart = cartData ? JSON.parse(cartData) : { items: [] };
-
-        const existingItemIndex = cart.items.findIndex((item) => item.variantId === variantId);
-
-        if (existingItemIndex > -1) {
-          cart.items[existingItemIndex].quantity += quantity;
-        } else {
-          cart.items.push({
-            id: `item_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-            variantId: variantId,
-            productId: productId,
-            title: productTitle,
-            variantTitle: variantBtn?.querySelector('.font-medium')?.textContent || '',
-            quantity: quantity,
-            price: price,
-            image: productImage,
-          });
-        }
-
-        localStorage.setItem('cart-storage', JSON.stringify(cart));
-
-        // Dispatch event to update cart count
-        window.dispatchEvent(new CustomEvent('cart-updated'));
+        // Use the centralized store
+        await addToCart({
+          variantId: variantId,
+          productId: productId || '',
+          title: title,
+          variantTitle: variantTitle,
+          quantity: quantity,
+          price: price,
+          image: productImage,
+        });
 
         btn.textContent = 'Added!';
         btn.classList.remove('bg-rose-600', 'hover:bg-rose-700');

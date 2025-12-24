@@ -137,10 +137,6 @@ export function clearCart() {
 export async function syncWithMedusa() {
   const localCart = $localCart.get();
 
-  if (localCart.items.length === 0) {
-    return;
-  }
-
   $cartLoading.set(true);
   $cartError.set(null);
 
@@ -149,6 +145,13 @@ export async function syncWithMedusa() {
 
     // Create cart if it doesn't exist
     if (!cartId) {
+      if (!localCart.regionId) {
+        const { regions } = await medusaClient.getRegions();
+        if (regions.length > 0) {
+          localCart.regionId = regions[0].id;
+        }
+      }
+
       const { cart } = await medusaClient.createCart(
         localCart.regionId ? { region_id: localCart.regionId } : undefined
       );
@@ -156,19 +159,22 @@ export async function syncWithMedusa() {
       $localCart.set({ ...localCart, id: cartId });
     }
 
-    // Add items to Medusa cart
+    // Fetch current Medusa cart to see what's already there
+    const { cart: existingCart } = await medusaClient.getCart(cartId);
+
+    // Simple sync: for now, just add items that aren't in Medusa cart
+    // In a real app, you'd want more complex merging/reconciling
     for (const item of localCart.items) {
-      try {
+      const exists = existingCart.items.find(mi => mi.variant.id === item.variantId);
+      if (!exists) {
         await medusaClient.addLineItem(cartId, {
           variant_id: item.variantId,
           quantity: item.quantity,
         });
-      } catch (error) {
-        console.error('Error adding item to Medusa cart:', error);
       }
     }
 
-    // Fetch updated cart
+    // Fetch final updated cart
     const { cart } = await medusaClient.getCart(cartId);
     $medusaCart.set(cart);
   } catch (error) {
@@ -210,6 +216,44 @@ export async function initializeCartFromMedusa(cartId: string) {
   } catch (error) {
     console.error('Error initializing cart from Medusa:', error);
     $cartError.set(error instanceof Error ? error.message : 'Failed to load cart');
+  } finally {
+    $cartLoading.set(false);
+  }
+}
+
+// Update cart with email and addresses
+export async function updateCart(data: { email?: string; shipping_address?: any; billing_address?: any }) {
+  const localCart = $localCart.get();
+  if (!localCart.id) throw new Error('No cart found');
+
+  $cartLoading.set(true);
+  try {
+    const { cart } = await medusaClient.updateCart(localCart.id, data);
+    $medusaCart.set(cart);
+    return cart;
+  } catch (error) {
+    console.error('Error updating cart:', error);
+    $cartError.set(error instanceof Error ? error.message : 'Failed to update cart');
+    throw error;
+  } finally {
+    $cartLoading.set(false);
+  }
+}
+
+// Complete the cart
+export async function completeCart() {
+  const localCart = $localCart.get();
+  if (!localCart.id) throw new Error('No cart found');
+
+  $cartLoading.set(true);
+  try {
+    const response = await medusaClient.completeCart(localCart.id);
+    clearCart(); // Clear local cart on success
+    return response;
+  } catch (error) {
+    console.error('Error completing cart:', error);
+    $cartError.set(error instanceof Error ? error.message : 'Failed to complete cart');
+    throw error;
   } finally {
     $cartLoading.set(false);
   }

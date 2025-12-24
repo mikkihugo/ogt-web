@@ -1,0 +1,129 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { medusaClient } from '../../lib/medusa';
+import { Marked } from 'marked';
+
+// Switch to SSR to support dynamic sales channels
+export const prerender = false;
+
+const { slug } = Astro.params;
+const { salesChannelIds } = Astro.locals;
+const salesChannelId = salesChannelIds && salesChannelIds.length > 0 ? salesChannelIds[0] : undefined;
+
+if (!slug) {
+  return Astro.redirect('/404');
+}
+
+const post = await medusaClient.getPostBySlug(slug, { sales_channel_id: salesChannelId });
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const formattedDate = new Date(post.published_at).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+const marked = new Marked();
+const htmlContent = marked.parse(post.content);
+---
+
+<Layout title={`${post.title} | Orgasm Toy Blog`}>
+  <Header />
+
+  <article class="min-h-screen bg-white">
+    <!-- Post Header -->
+    <header class="bg-gray-50 py-16 md:py-24 border-b border-gray-100">
+      <div class="container mx-auto px-4 max-w-4xl text-center">
+        <div class="mb-6">
+          <span class="bg-rose-100 text-rose-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+            {post.category}
+          </span>
+        </div>
+        
+        <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          {post.title}
+        </h1>
+        
+        <div class="flex items-center justify-center gap-4 text-gray-500 text-sm">
+          <time datetime={post.publishedDate}>{formattedDate}</time>
+          <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+          <span>Wellness Team</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Featured Image -->
+    <!-- Featured Image -->
+    {post.featured_image && (
+      <div class="container mx-auto px-4 -mt-12 md:-mt-20 mb-16 max-w-5xl">
+        <div class="aspect-[21/9] rounded-3xl overflow-hidden shadow-2xl">
+          <img 
+            src={post.featured_image} 
+            alt={post.title} 
+            class="w-full h-full object-cover"
+          />
+        </div>
+      </div>
+    )}
+
+    <!-- Content -->
+    <div class="container mx-auto px-4 max-w-3xl pb-24 prose prose-rose prose-lg">
+      <div class="mb-8 italic text-xl text-gray-600 border-l-4 border-rose-200 pl-6 py-2">
+        {post.excerpt}
+      </div>
+      
+      <div class="rich-content" set:html={htmlContent}>
+      </div>
+    </div>
+  </article>
+
+  <!-- More Posts Suggestion -->
+  <section class="bg-gray-50 py-20 border-t border-gray-100">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold mb-12">More from our blog</h2>
+      <a href="/blog" class="inline-flex items-center text-rose-600 font-semibold hover:gap-3 transition-all">
+        Back to all posts 
+        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style is:global>
+  .rich-content h2 {
+    @apply text-3xl font-bold mt-12 mb-6 text-gray-900;
+  }
+  .rich-content h3 {
+    @apply text-2xl font-bold mt-8 mb-4 text-gray-900;
+  }
+  .rich-content p {
+    @apply mb-6 text-gray-700 leading-relaxed;
+  }
+  .rich-content ul {
+    @apply list-disc list-inside mb-6 space-y-2 text-gray-700;
+  }
+  .rich-content ol {
+    @apply list-decimal list-inside mb-6 space-y-2 text-gray-700;
+  }
+  .rich-content strong {
+    @apply font-bold text-gray-900;
+  }
+  .rich-content a {
+    @apply text-rose-600 underline hover:text-rose-700;
+  }
+  .rich-content blockquote {
+    @apply border-l-4 border-rose-200 pl-6 italic my-8 text-xl text-gray-600;
+  }
+</style>

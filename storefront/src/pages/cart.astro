@@ -111,13 +111,17 @@ import { formatPrice } from '../lib/medusa';
 
   <Footer />
 
-  <script is:inline>
+  <script>
+    import { $localCart, $cartTotal, updateCartItemQuantity, removeFromCart, syncWithMedusa } from '../stores/cart';
+    import { formatPrice } from '../lib/medusa';
+
     function renderCart() {
-      const cartData = localStorage.getItem('cart-storage');
-      const cart = cartData ? JSON.parse(cartData) : { items: [] };
+      const cart = $localCart.get();
       const cartItemsEl = document.getElementById('cart-items');
       const emptyCartEl = document.getElementById('empty-cart');
       const checkoutBtn = document.getElementById('checkout-btn');
+
+      if (!cartItemsEl || !emptyCartEl || !checkoutBtn) return;
 
       if (!cart.items || cart.items.length === 0) {
         cartItemsEl.innerHTML = '';
@@ -131,21 +135,10 @@ import { formatPrice } from '../lib/medusa';
       checkoutBtn.classList.remove('opacity-50', 'pointer-events-none');
 
       let html = '';
-      let subtotal = 0;
-
       cart.items.forEach((item) => {
         const itemTotal = item.price * item.quantity;
-        subtotal += itemTotal;
-
-        const formattedPrice = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        }).format(item.price / 100);
-
-        const formattedTotal = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        }).format(itemTotal / 100);
+        const formattedPrice = formatPrice(item.price);
+        const formattedTotal = formatPrice(itemTotal);
 
         html += `
           <div class="bg-white rounded-lg shadow-sm p-6">
@@ -165,8 +158,8 @@ import { formatPrice } from '../lib/medusa';
                     ${item.variantTitle ? `<p class="text-sm text-gray-600">${item.variantTitle}</p>` : ''}
                   </div>
                   <button
-                    onclick="removeItem('${item.id}')"
-                    class="text-gray-400 hover:text-red-600 transition"
+                    data-remove-id="${item.id}"
+                    class="remove-item-btn text-gray-400 hover:text-red-600 transition"
                     aria-label="Remove item"
                   >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,8 +173,9 @@ import { formatPrice } from '../lib/medusa';
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <button
-                      onclick="updateItemQuantity('${item.id}', ${item.quantity - 1})"
-                      class="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50 transition flex items-center justify-center"
+                      data-update-id="${item.id}"
+                      data-delta="-1"
+                      class="update-qty-btn w-8 h-8 border border-gray-300 rounded hover:bg-gray-50 transition flex items-center justify-center"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
@@ -189,8 +183,9 @@ import { formatPrice } from '../lib/medusa';
                     </button>
                     <span class="w-12 text-center font-medium">${item.quantity}</span>
                     <button
-                      onclick="updateItemQuantity('${item.id}', ${item.quantity + 1})"
-                      class="w-8 h-8 border border-gray-300 rounded hover:bg-gray-50 transition flex items-center justify-center"
+                      data-update-id="${item.id}"
+                      data-delta="1"
+                      class="update-qty-btn w-8 h-8 border border-gray-300 rounded hover:bg-gray-50 transition flex items-center justify-center"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -207,52 +202,49 @@ import { formatPrice } from '../lib/medusa';
       });
 
       cartItemsEl.innerHTML = html;
-      updateSummary(subtotal);
+      
+      // Re-attach event listeners
+      document.querySelectorAll('.remove-item-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = (btn as HTMLElement).dataset.removeId;
+          if (id) {
+            removeFromCart(id);
+            syncWithMedusa();
+          }
+        });
+      });
+
+      document.querySelectorAll('.update-qty-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = (btn as HTMLElement).dataset.updateId;
+          const delta = parseInt((btn as HTMLElement).dataset.delta || '0');
+          const item = cart.items.find(i => i.id === id);
+          if (id && item) {
+            updateCartItemQuantity(id, item.quantity + delta);
+            syncWithMedusa();
+          }
+        });
+      });
     }
 
-    function updateSummary(subtotal) {
-      const formattedSubtotal = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(subtotal / 100);
-
-      document.getElementById('subtotal').textContent = formattedSubtotal;
-      document.getElementById('total').textContent = formattedSubtotal;
+    function updateSummary(total: number) {
+      const formattedTotal = formatPrice(total);
+      const subtotalEl = document.getElementById('subtotal');
+      const totalEl = document.getElementById('total');
+      if (subtotalEl) subtotalEl.textContent = formattedTotal;
+      if (totalEl) totalEl.textContent = formattedTotal;
     }
 
-    function updateItemQuantity(itemId, newQuantity) {
-      if (newQuantity <= 0) {
-        removeItem(itemId);
-        return;
-      }
-
-      const cartData = localStorage.getItem('cart-storage');
-      const cart = cartData ? JSON.parse(cartData) : { items: [] };
-
-      const itemIndex = cart.items.findIndex((item) => item.id === itemId);
-      if (itemIndex > -1) {
-        cart.items[itemIndex].quantity = newQuantity;
-        localStorage.setItem('cart-storage', JSON.stringify(cart));
-        window.dispatchEvent(new CustomEvent('cart-updated'));
-        renderCart();
-      }
-    }
-
-    function removeItem(itemId) {
-      const cartData = localStorage.getItem('cart-storage');
-      const cart = cartData ? JSON.parse(cartData) : { items: [] };
-
-      cart.items = cart.items.filter((item) => item.id !== itemId);
-      localStorage.setItem('cart-storage', JSON.stringify(cart));
-      window.dispatchEvent(new CustomEvent('cart-updated'));
+    // Subscribe to stores
+    $localCart.subscribe(() => {
       renderCart();
-    }
+    });
 
-    // Initial render
-    renderCart();
+    $cartTotal.subscribe((total) => {
+      updateSummary(total);
+    });
 
-    // Listen for cart updates
-    window.addEventListener('cart-updated', renderCart);
-    window.addEventListener('storage', renderCart);
+    // Initial sync
+    syncWithMedusa();
   </script>
 </Layout>

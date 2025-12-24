@@ -25,9 +25,11 @@
     "@medusajs/admin-sdk": "2.11.3",
     "@medusajs/cli": "2.11.3",
     "@medusajs/framework": "2.11.3",
+    "@medusajs/icons": "^2.11.3",
     "@medusajs/medusa": "2.11.3",
     "@medusajs/payment": "^2.11.3",
-    "@medusajs/payment-stripe": "^2.11.3"
+    "@medusajs/payment-stripe": "^2.11.3",
+    "@medusajs/ui": "^4.0.27"
   },
   "devDependencies": {
     "@medusajs/test-utils": "2.11.3",
