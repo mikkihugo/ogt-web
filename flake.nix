@@ -80,9 +80,9 @@
             # Utilities
             jq
             curl
-            jq
-            curl
             awscli2
+            just
+            actionlint
 
             # Go Development
             go
