@@ -159,6 +159,7 @@
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;  # We handle build in buildPhase
+          dontCheckForBrokenSymlinks = true;
           
           nativeBuildInputs = [ 
             pkgs.pkg-config 
@@ -212,6 +213,7 @@
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;
+          dontCheckForBrokenSymlinks = true;
           
           nativeBuildInputs = [ 
             pkgs.pkg-config 
