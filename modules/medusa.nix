@@ -62,6 +62,7 @@ in
         ln -sfn ${medusaPackage}/package.json /var/lib/medusa/package.json
         ln -sfn ${medusaPackage}/node_modules /var/lib/medusa/node_modules
         ln -sfn ${medusaPackage}/src /var/lib/medusa/src
+        ln -sfn ${medusaPackage}/tsconfig.json /var/lib/medusa/tsconfig.json
         ln -sfn ${medusaPackage}/.medusa /var/lib/medusa/.medusa
         
         cd /var/lib/medusa
