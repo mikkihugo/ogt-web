@@ -9,29 +9,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  SERVER_IP: 77.42.66.89
-  SERVER_USER: root
-
 jobs:
-  build-images:
+  deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        system: [x86_64-linux, aarch64-linux]
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up QEMU for cross-compilation
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
 
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
@@ -42,164 +25,39 @@ jobs:
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Build and push Storefront image
-        run: |
-          nix build .#packages.${{ matrix.system }}.storefrontImage.copyToRegistry --impure
-        env:
-          REGISTRY_USERNAME: ${{ github.actor }}
-          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build NixOS configuration
+        run: nix build .#nixosConfigurations.ogt-web-prod.config.system.build.toplevel --print-build-logs
 
-      - name: Build and push Medusa image
-        run: |
-          nix build .#packages.${{ matrix.system }}.dockerImage.copyToRegistry --impure
-        env:
-          REGISTRY_USERNAME: ${{ github.actor }}
-          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-
-  deploy:
-    needs: [build-images]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Deploy to Hetzner
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          MEDUSA_ADMIN_PASSWORD: ${{ secrets.MEDUSA_ADMIN_PASSWORD }}
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          host: ${{ env.SERVER_IP }}
-          username: ${{ env.SERVER_USER }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: ssh-keyscan -H 77.42.66.89 >> ~/.ssh/known_hosts
+
+      - name: Copy closure to server
+        run: nix copy --to ssh://root@77.42.66.89 ./result
+
+      - name: Get store path
+        id: store-path
+        run: echo "path=$(readlink -f ./result)" >> "$GITHUB_OUTPUT"
+
+      - name: Activate configuration
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 77.42.66.89
+          username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: MEDUSA_ADMIN_PASSWORD
           script: |
-            export MEDUSA_ADMIN_PASSWORD=$MEDUSA_ADMIN_PASSWORD
-            # Only ensure directory exists
-            mkdir -p /opt/ogt
+            ${{ steps.store-path.outputs.path }}/bin/switch-to-configuration switch
 
-            cat > /opt/ogt/docker-compose.yml << 'EOF'
-            version: "3.8"
-            services:
-              caddy:
-                image: caddy:2-alpine
-                restart: unless-stopped
-                ports: ["80:80", "443:443"]
-                volumes:
-                  - ./Caddyfile:/etc/caddy/Caddyfile:ro
-                  - caddy_data:/data
-                  - caddy_config:/config
-                depends_on: [medusa, storefront, minio]
-                networks: [ogt]
-              
-              postgres:
-                image: postgres:16-alpine
-                restart: unless-stopped
-                environment:
-                  POSTGRES_USER: medusa
-                  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-                  POSTGRES_DB: medusa
-                volumes: [postgres_data:/var/lib/postgresql/data]
-                healthcheck:
-                  test: ["CMD-SHELL", "pg_isready -U medusa"]
-                  interval: 5s
-                  retries: 5
-                networks: [ogt]
-
-              redis:
-                image: redis:7-alpine
-                restart: unless-stopped
-                volumes: [redis_data:/data]
-                healthcheck:
-                  test: ["CMD", "redis-cli", "ping"]
-                  interval: 5s
-                  retries: 5
-                networks: [ogt]
-
-              minio:
-                image: minio/minio:RELEASE.2024-01-18T22-51-28Z
-                restart: unless-stopped
-                command: server /data --console-address ":9001"
-                environment:
-                  MINIO_ROOT_USER: minioadmin
-                  MINIO_ROOT_PASSWORD: ${{ secrets.MEDUSA_ADMIN_PASSWORD }}
-                volumes: [minio_data:/data]
-                networks: [ogt]
-
-              medusa:
-                image: ghcr.io/mikkihugo/ogt/medusa:latest
-                restart: unless-stopped
-                environment:
-                  NODE_ENV: production
-                  DATABASE_URL: postgres://medusa:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/medusa?sslmode=disable
-                  REDIS_URL: redis://redis:6379
-                  JWT_SECRET: ${{ secrets.JWT_SECRET }}
-                  COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
-                  STORE_CORS: https://orgasmtoy.com,https://www.orgasmtoy.com,https://ownorgasm.com,https://www.ownorgasm.com
-                  ADMIN_CORS: https://admin.ownorgasm.com
-                  AUTH_CORS: https://orgasmtoy.com,https://ownorgasm.com,https://admin.ownorgasm.com
-                  STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
-                  STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-                  MEDUSA_BACKEND_URL: https://admin.ownorgasm.com
-                  MINIO_ENDPOINT: http://minio:9000
-                  MINIO_ACCESS_KEY: minioadmin
-                  MINIO_SECRET_KEY: ${{ secrets.MEDUSA_ADMIN_PASSWORD }}
-                depends_on:
-                  postgres: { condition: service_healthy }
-                  redis: { condition: service_healthy }
-                  minio: { condition: service_started }
-                networks: [ogt]
-
-              storefront:
-                image: ghcr.io/mikkihugo/ogt/storefront:latest
-                restart: unless-stopped
-                environment:
-                  NODE_ENV: production
-                  PUBLIC_MEDUSA_BACKEND_URL: https://admin.ownorgasm.com
-                  PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
-                depends_on: [medusa]
-                networks: [ogt]
-
-            volumes:
-              postgres_data:
-              redis_data:
-              minio_data:
-              caddy_data:
-              caddy_config:
-
-            networks:
-              ogt:
-                driver: bridge
-            EOF
-
-            cat > /opt/ogt/Caddyfile << 'EOF'
-            {
-                email support@ownorgasm.com
-            }
-            admin.ownorgasm.com {
-                reverse_proxy medusa:9000
-            }
-            minio.ownorgasm.com {
-                reverse_proxy minio:9000
-            }
-            ownorgasm.com, www.ownorgasm.com {
-                reverse_proxy storefront:3000
-            }
-            orgasmtoy.com, www.orgasmtoy.com {
-                reverse_proxy storefront:3000
-            }
-            EOF
-
-            cd /opt/ogt
-            docker compose pull
-            docker compose up -d --remove-orphans
-
-            # Wait for Medusa to be ready
-            sleep 15
-
-            # Run migrations and seed
-            docker compose exec -T medusa yarn medusa db:migrate
-            # Run seed if environment var is set or on update
-            docker compose exec -T medusa yarn medusa exec ./src/scripts/seed.ts || echo "Seed failed or already okay"
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 77.42.66.89
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            nixos-version
+            systemctl status postgresql redis-default caddy --no-pager || true

@@ -1,4 +1,15 @@
-# Encrypt secrets and env files with git-crypt (include diff driver for clean diffs)
-secrets/** filter=git-crypt diff=git-crypt
-.env.encrypted filter=git-crypt diff=git-crypt
-../.keys/* filter=git-crypt diff=git-crypt
+# Line endings normalization
+* text=auto
+
+# Binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# Secrets managed by sops-nix (not git-crypt)
+# secrets/secrets.yaml is encrypted with age, safe to commit

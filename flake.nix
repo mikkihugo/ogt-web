@@ -17,13 +17,15 @@
 #
 # =============================================================================
 {
-  description = "OGT-Web: Medusa.js E-commerce on Hetzner with Docker";
+  description = "OGT-Web: Medusa.js E-commerce on Hetzner with NixOS";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
     nix2container.url = "github:nlewo/nix2container";
     nix2container.inputs.nixpkgs.follows = "nixpkgs";
+    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   nixConfig = {
@@ -35,7 +37,18 @@
     ];
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix2container }:
+  outputs = { self, nixpkgs, flake-utils, nix2container, sops-nix }:
+    let
+      # NixOS configuration for production server
+      nixosConfigurations.ogt-web-prod = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        specialArgs = { inherit self nixpkgs sops-nix; inputs = { inherit sops-nix; }; };
+        modules = [ ./hosts/ogt-web-prod ];
+      };
+    in
+    {
+      inherit nixosConfigurations;
+    } //
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
