@@ -204,16 +204,15 @@
           vendorHash = "sha256-y8EArq0xwXxAzA5df1drkAbEzkwFEMXk5U4HJ67DDi4=";
         };
 
-        # Build Medusa E-commerce Backend (uses root monorepo lockfile)
-        medusa = pkgs.buildNpmPackage {
-          name = "ogt-web-medusa";
-          src = ./.;  # Use monorepo root for lockfile
+        # Medusa Backend (API only, no admin UI)
+        medusa-backend = pkgs.buildNpmPackage {
+          name = "ogt-web-medusa-backend";
+          src = ./.;
           
-          # Same deps hash as storefront (shared monorepo lockfile)
           npmDepsHash = "sha256-0C0Kx6S34I/xIx5mk6WcoRt+mmOxWGbzoiAMveop8kw=";
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
-          dontNpmBuild = true;  # We handle build in buildPhase
+          dontNpmBuild = true;
           
           nativeBuildInputs = [ 
             pkgs.pkg-config 
@@ -230,10 +229,10 @@
           ];
 
           buildPhase = ''
-            # Fix for sharp/node-gyp in Nix
             export PYTHON=${pkgs.python3}/bin/python3
             
-            # Mock environment for medusa build (it may validate config but shouldn't connect)
+            # Disable admin UI during build (reduces complexity, admin deployed separately)
+            export MEDUSA_DISABLE_ADMIN=true
             export DATABASE_URL="postgres://mock:mock@localhost:5432/mock"
             export JWT_SECRET="build-time-secret"
             export COOKIE_SECRET="build-time-secret"
@@ -245,15 +244,40 @@
 
           installPhase = ''
             mkdir -p $out
-            
-            # Copy the built Medusa app
             cp -r apps/medusa/* $out/
-            
-            # Copy node_modules (includes workspace deps)
             cp -r node_modules $out/node_modules
-            
-            # Copy root package files for workspace resolution
             cp package.json $out/
+          '';
+        };
+
+        # Medusa Admin UI (built separately for Caddy static serving)
+        medusa-admin = pkgs.buildNpmPackage {
+          name = "ogt-web-medusa-admin";
+          src = ./.;
+          
+          npmDepsHash = "sha256-0C0Kx6S34I/xIx5mk6WcoRt+mmOxWGbzoiAMveop8kw=";
+          makeCacheWritable = true;
+          npmFlags = [ "--legacy-peer-deps" ];
+          dontNpmBuild = true;
+          
+          nativeBuildInputs = [ 
+            pkgs.pkg-config 
+            pkgs.python3
+          ];
+
+          buildPhase = ''
+            export PYTHON=${pkgs.python3}/bin/python3
+            export MEDUSA_BACKEND_URL="https://admin.ownorgasm.com"
+            
+            # Build admin only
+            cd apps/medusa
+            npx medusa build --admin-only
+          '';
+
+          installPhase = ''
+            mkdir -p $out
+            # Admin build output is in .medusa/admin
+            cp -r apps/medusa/.medusa/admin/* $out/
           '';
         };
 

@@ -5,8 +5,8 @@ with lib;
 let
   cfg = config.services.medusa;
   
-  # Use the dedicated medusa package from flake packages output
-  medusaPackage = self.packages.aarch64-linux.medusa;
+  # Use the backend-only medusa package (no admin UI)
+  medusaPackage = self.packages.aarch64-linux.medusa-backend;
 in
 {
   options.services.medusa = {
