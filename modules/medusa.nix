@@ -61,6 +61,8 @@ in
         ln -sfn ${medusaPackage}/medusa-config.js /var/lib/medusa/medusa-config.js
         ln -sfn ${medusaPackage}/package.json /var/lib/medusa/package.json
         ln -sfn ${medusaPackage}/node_modules /var/lib/medusa/node_modules
+        ln -sfn ${medusaPackage}/src /var/lib/medusa/src
+        ln -sfn ${medusaPackage}/.medusa /var/lib/medusa/.medusa
         
         cd /var/lib/medusa
         exec ${pkgs.nodejs_22}/bin/node node_modules/@medusajs/cli/cli.js start
