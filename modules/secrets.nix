@@ -6,11 +6,16 @@ with lib;
 {
   options.ogt.secrets = {
     enable = mkEnableOption "OGT secrets management via sops-nix";
+    
+    sopsFile = mkOption {
+      type = types.path;
+      description = "Path to the sops secrets file";
+    };
   };
 
   config = mkIf config.ogt.secrets.enable {
     sops = {
-      defaultSopsFile = ../../secrets/secrets.yaml;
+      defaultSopsFile = config.ogt.secrets.sopsFile;
       age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
       
       secrets = {

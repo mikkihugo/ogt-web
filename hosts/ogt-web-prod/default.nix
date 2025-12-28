@@ -37,7 +37,10 @@
   # ==========================================================================
   
   ogt = {
-    secrets.enable = true;
+    secrets = {
+      enable = true;
+      sopsFile = ../../secrets/secrets.yaml;
+    };
     database.enable = true;
     storage.enable = true;
     caddy.enable = true;
