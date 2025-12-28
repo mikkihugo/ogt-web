@@ -5,8 +5,8 @@ with lib;
 let
   cfg = config.services.medusa;
   
-  # Use the medusa package from flake packages output
-  medusaPackage = self.packages.aarch64-linux.medusa or null;
+  # Use the storefront-next package which includes all monorepo node_modules
+  storefrontPackage = self.packages.aarch64-linux.storefront-next;
 in
 {
   options.services.medusa = {
@@ -32,7 +32,6 @@ in
   };
 
   config = mkIf cfg.enable {
-    # Medusa requires npm to run - use a wrapper script
     systemd.services.medusa = {
       description = "Medusa E-commerce Backend";
       after = [ "network.target" "postgresql.service" "redis-default.service" ];
@@ -47,13 +46,18 @@ in
         ADMIN_CORS = "https://admin.ownorgasm.com";
         AUTH_CORS = "https://ownorgasm.com,https://admin.ownorgasm.com";
         MEDUSA_BACKEND_URL = "https://admin.ownorgasm.com";
+        HOME = "/var/lib/medusa";
+        npm_config_cache = "/var/lib/medusa/.npm";
       };
+      
+      # Use the monorepo node_modules from storefront package
+      script = ''
+        cd ${storefrontPackage}/apps/medusa
+        exec ${pkgs.nodejs_22}/bin/node node_modules/@medusajs/medusa/dist/index.js start
+      '';
       
       serviceConfig = {
         Type = "simple";
-        # For now, Medusa needs to be cloned and built on the server
-        # TODO: Create proper Nix package for Medusa
-        ExecStart = "${pkgs.nodejs_22}/bin/npx medusa start";
         WorkingDirectory = "/var/lib/medusa";
         Restart = "on-failure";
         RestartSec = 5;
@@ -63,6 +67,7 @@ in
         Group = "medusa";
         DynamicUser = true;
         StateDirectory = "medusa";
+        CacheDirectory = "medusa";
         
         # Secrets via sops-nix
         EnvironmentFile = [

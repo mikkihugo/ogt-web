@@ -196,7 +196,7 @@
           '';
         };
 
-        # 1. Build Go Marketing Service
+        # Build Go Marketing Service
         marketing-service = pkgs.buildGoModule {
           pname = "marketing-service";
           version = "1.0.0";
@@ -204,6 +204,39 @@
           vendorHash = "sha256-y8EArq0xwXxAzA5df1drkAbEzkwFEMXk5U4HJ67DDi4=";
         };
 
+        # Build Medusa E-commerce Backend (uses root monorepo lockfile)
+        medusa = pkgs.buildNpmPackage {
+          name = "ogt-web-medusa";
+          src = ./.;  # Use monorepo root for lockfile
+          
+          # Same deps hash as storefront (shared monorepo lockfile)
+          npmDepsHash = "sha256-0C0Kx6S34I/xIx5mk6WcoRt+mmOxWGbzoiAMveop8kw=";
+          makeCacheWritable = true;
+          npmFlags = [ "--legacy-peer-deps" ];
+          dontNpmBuild = true;  # We handle build in buildPhase
+          
+          nativeBuildInputs = [ 
+            pkgs.pkg-config 
+            pkgs.python3
+          ];
+
+          buildPhase = ''
+            npm run build --workspace=apps/medusa
+          '';
+
+          installPhase = ''
+            mkdir -p $out
+            
+            # Copy the built Medusa app
+            cp -r apps/medusa/* $out/
+            
+            # Copy node_modules (includes workspace deps)
+            cp -r node_modules $out/node_modules
+            
+            # Copy root package files for workspace resolution
+            cp package.json $out/
+          '';
+        };
 
         };
 
