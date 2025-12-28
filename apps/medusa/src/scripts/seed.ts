@@ -62,7 +62,7 @@ export default async function seedDemo(container: MedusaContainer, args: ExecArg
       description: "Timeless pleasure.",
       sales_channels: [{ id: scOrgasmToy.id }],
       price: 4900,
-      image: "https://dummyimage.com/600x400/000/fff&text=Vibrator"
+      image: "https://picsum.photos/seed/plant1/600/400"
     },
     {
       title: "Luxury Wand",
@@ -70,7 +70,7 @@ export default async function seedDemo(container: MedusaContainer, args: ExecArg
       description: "Premium power for OwnOrgasm.",
       sales_channels: [{ id: scOwnOrgasm.id }],
       price: 12900,
-      image: "https://dummyimage.com/600x400/000/fff&text=Luxury+Wand"
+      image: "https://picsum.photos/seed/flower2/600/400"
     },
     {
       title: "Silky Lubricant",
@@ -78,7 +78,7 @@ export default async function seedDemo(container: MedusaContainer, args: ExecArg
       description: "Smooth sailing for everyone.",
       sales_channels: [{ id: scOrgasmToy.id }, { id: scOwnOrgasm.id }],
       price: 1500,
-      image: "https://dummyimage.com/600x400/000/fff&text=Lube"
+      image: "https://picsum.photos/seed/leaf3/600/400"
     }
   ]
 
@@ -123,6 +123,10 @@ export default async function seedDemo(container: MedusaContainer, args: ExecArg
 
       // 4. Inventory (Critical for Checkout)
       const variant = product.variants[0]
+      const inventoryModule = container.resolve(Modules.INVENTORY)
+      const link = container.resolve(ContainerRegistrationKeys.REMOTE_LINK)
+      const stockLocationModule = container.resolve(Modules.STOCK_LOCATION)
+
       const inventoryItem = await inventoryModule.createInventoryItems({
         sku: `${p.handle}-sku`,
         requires_shipping: true
@@ -177,8 +181,8 @@ export default async function seedDemo(container: MedusaContainer, args: ExecArg
   // 5. Collections with Images (for Site Content)
   logger.info("Creating collections with images...")
   const collectionsData = [
-    { title: "Summer Vibes", handle: "summer-vibes", image: "https://dummyimage.com/800x300/ff69b4/fff&text=Summer+Vibes" },
-    { title: "Essentials", handle: "essentials", image: "https://dummyimage.com/800x300/333/fff&text=Essentials" }
+    { title: "Summer Vibes", handle: "summer-vibes", image: "https://picsum.photos/seed/summer/800/300" },
+    { title: "Essentials", handle: "essentials", image: "https://picsum.photos/seed/nature/800/300" }
   ]
 
   for (const c of collectionsData) {
