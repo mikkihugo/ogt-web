@@ -155,7 +155,7 @@
           src = ./.;
           
           # NPM configuration - hash will be recalculated
-          npmDepsHash = lib.fakeHash;
+          npmDepsHash = pkgs-x86.lib.fakeHash;
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;  # We handle build in buildPhase
