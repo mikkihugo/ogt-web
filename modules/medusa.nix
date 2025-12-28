@@ -5,8 +5,8 @@ with lib;
 let
   cfg = config.services.medusa;
   
-  # Use the storefront-next package which includes all monorepo node_modules
-  storefrontPackage = self.packages.aarch64-linux.storefront-next;
+  # Use the dedicated medusa package from flake packages output
+  medusaPackage = self.packages.aarch64-linux.medusa;
 in
 {
   options.services.medusa = {
@@ -50,9 +50,9 @@ in
         npm_config_cache = "/var/lib/medusa/.npm";
       };
       
-      # Use the monorepo node_modules from storefront package
+      # Use the pre-built medusa package
       script = ''
-        cd ${storefrontPackage}/apps/medusa
+        cd ${medusaPackage}
         exec ${pkgs.nodejs_22}/bin/node node_modules/@medusajs/medusa/dist/index.js start
       '';
       

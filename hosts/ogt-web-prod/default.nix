@@ -4,10 +4,14 @@
   imports = [
     ./hardware.nix
     ./networking.nix
+    # OGT modules
+    ../../modules/secrets.nix
+    ../../modules/caddy-routes.nix
     ../../modules/medusa.nix
     ../../modules/storefront.nix
     ../../modules/marketing-service.nix
     ../../modules/strapi.nix
+    # External modules
     inputs.sops-nix.nixosModules.sops
   ];
 
@@ -36,22 +40,10 @@
   ];
 
   # ==========================================================================
-  # SECRETS (sops-nix)
+  # SECRETS (via ogt.secrets module)
   # ==========================================================================
   
-  sops = {
-    defaultSopsFile = ../../secrets/secrets.yaml;
-    age.keyFile = "/var/lib/sops-nix/key.txt";
-    
-    secrets = {
-      "postgres/password" = {};
-      "medusa/jwt_secret" = {};
-      "medusa/cookie_secret" = {};
-      "stripe/api_key" = {};
-      "stripe/webhook_secret" = {};
-      "minio/secret_key" = {};
-    };
-  };
+  ogt.secrets.enable = true;
 
   # ==========================================================================
   # POSTGRESQL
@@ -61,10 +53,11 @@
     enable = true;
     package = pkgs.postgresql_18;
     
-    ensureDatabases = [ "medusa" "strapi" ];
+    ensureDatabases = [ "medusa" "strapi" "marketing" ];
     ensureUsers = [
       { name = "medusa"; ensureDBOwnership = true; }
       { name = "strapi"; ensureDBOwnership = true; }
+      { name = "postgres"; }  # For marketing-service
     ];
     
     authentication = pkgs.lib.mkOverride 10 ''
@@ -90,51 +83,17 @@
   
   services.minio = {
     enable = true;
-    listenAddress = "127.0.0.1:9000";
-    consoleAddress = "127.0.0.1:9001";
-    rootCredentialsFile = config.sops.secrets."minio/secret_key".path;
+    listenAddress = "127.0.0.1:9100";
+    consoleAddress = "127.0.0.1:9101";
+    rootCredentialsFile = config.sops.secrets."minio/root_password".path;
   };
 
   # ==========================================================================
-  # CADDY (Reverse Proxy with automatic HTTPS)
+  # CADDY (via ogt.caddy module)
   # ==========================================================================
   
-  services.caddy = {
-    enable = true;
-    email = "support@ownorgasm.com";
-    
-    virtualHosts = {
-      "ownorgasm.com" = {
-        extraConfig = ''
-          reverse_proxy localhost:3000
-        '';
-      };
-      
-      "www.ownorgasm.com" = {
-        extraConfig = ''
-          redir https://ownorgasm.com{uri} permanent
-        '';
-      };
-      
-      "admin.ownorgasm.com" = {
-        extraConfig = ''
-          reverse_proxy localhost:9000
-        '';
-      };
-      
-      "minio.ownorgasm.com" = {
-        extraConfig = ''
-          reverse_proxy localhost:9100
-        '';
-      };
-      
-      "cms.ownorgasm.com" = {
-        extraConfig = ''
-          reverse_proxy localhost:1337
-        '';
-      };
-    };
-  };
+  ogt.caddy.enable = true;
+  services.caddy.email = "support@ownorgasm.com";
 
   # ==========================================================================
   # APPLICATION SERVICES
