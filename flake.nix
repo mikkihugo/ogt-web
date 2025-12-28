@@ -86,7 +86,7 @@
 
             # Secrets management
             git
-            git-crypt
+            sops
             gh  # GitHub CLI for gist management
 
             # Utilities
@@ -132,19 +132,18 @@
             echo "  just dev-infra   # Start infrastructure (Podman)"
             echo "  npm run dev      # Start development server"
             echo ""
-            echo "Secrets are managed via git-crypt and .env.encrypted only."
+            echo "Secrets are managed via sops-nix (age encrypted)."
+            echo "  To edit: sops secrets/secrets.yaml"
 
-            # Auto-unlock git-crypt using private gist if gh is authenticated
-            if command -v gh >/dev/null 2>&1 && command -v git-crypt >/dev/null 2>&1; then
-              if gh auth status >/dev/null 2>&1; then
-                KEY_TMP="$(mktemp)"
-                if gh gist view ee80dfac1a1d7857909abc51294f8959 --raw > "$KEY_TMP" 2>/dev/null; then
-                  chmod 600 "$KEY_TMP"
-                  base64 -d "$KEY_TMP" > "$KEY_TMP.dec" 2>/dev/null && mv "$KEY_TMP.dec" "$KEY_TMP"
-                  if git-crypt unlock "$KEY_TMP" >/dev/null 2>&1; then
-                    echo "🔓 git-crypt unlocked from gist key"
-                  fi
-                  rm -f "$KEY_TMP" "$KEY_TMP.dec" 2>/dev/null || true
+            # Auto-setup sops age key from gist if not present
+            if [ ! -f ~/.config/sops/age/keys.txt ]; then
+              if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+                AGE_KEY=$(gh gist view c2efe93258b7cef394aff1b6fd7c7860 --raw 2>/dev/null | grep "AGE-SECRET-KEY" | head -1)
+                if [ -n "$AGE_KEY" ]; then
+                  mkdir -p ~/.config/sops/age
+                  echo "$AGE_KEY" > ~/.config/sops/age/keys.txt
+                  chmod 600 ~/.config/sops/age/keys.txt
+                  echo "🔓 sops age key configured from gist"
                 fi
               fi
             fi
@@ -241,77 +240,6 @@
           src = ./apps/marketing-service-go;
           vendorHash = "sha256-y8EArq0xwXxAzA5df1drkAbEzkwFEMXk5U4HJ67DDi4=";
         };
-
-  # 2. Storefront Builder
-        storefrontImage = nix2containerPkgs.nix2container.buildImage {
-          name = "ghcr.io/mikkihugo/ogt/storefront";
-          tag = "latest";
-          copyToRoot = [ 
-            pkgs.nodejs_22 
-            (pkgs.runCommand "storefront-app" {} ''
-              mkdir -p $out/apps/storefront-next
-              cp -r ${storefront-next}/* $out/apps/storefront-next/
-            '')
-          ];
-          config = {
-            Cmd = [ "node" "apps/storefront-next/server.js" ];
-            WorkingDir = "/"; # Set working directory to root to make Cmd path robust
-            Env = [
-              "NODE_ENV=production"
-              "PORT=3000"
-              "HOSTNAME=0.0.0.0"
-            ];
-          };
-        };
-
-          chatwootImage = nix2containerPkgs.nix2container.pullImage {
-            imageName = "chatwoot/chatwoot";
-            imageDigest = "sha256:ce7f650dcda73ad81e96023a5eb9825750e3de67c103d75496b1d28b825fb2ab";
-            sha256 = "sha256-e8NLJvxasUnGrKY4StepxtT7CevQmS6B8Lf8/edn23w="; 
-          };
-
-          caddyImage = nix2containerPkgs.nix2container.buildImage {
-            name = "ogt-web-proxy";
-            tag = "latest";
-            config = {
-              Cmd = [ "caddy" "run" "--config" "/etc/caddy/Caddyfile" "--adapter" "caddyfile" ];
-              ExposedPorts = {
-                "80/tcp" = {};
-                "443/tcp" = {};
-              };
-            };
-            layers = [
-              (nix2containerPkgs.nix2container.buildLayer {
-                deps = with pkgs; [ caddy ];
-              })
-              (nix2containerPkgs.nix2container.buildLayer {
-                copyToRoot = [
-                  (pkgs.runCommand "caddy-config" {} ''
-                    mkdir -p $out/etc/caddy
-                    cp ${./Caddyfile} $out/etc/caddy/Caddyfile
-                  '')
-                ];
-              })
-            ];
-          };
-
-          unifiedImage = nix2containerPkgs.nix2container.buildImage {
-              name = "unified-platform";
-              tag = "latest";
-              copyToRoot = [ 
-                (pkgs.buildEnv {
-                  name = "root";
-                  paths = [ self.packages.${system}.marketing-service self.packages.${system}.storefront-next pkgs.cacert ];
-                  pathsToLink = [ "/bin" "/etc/ssl/certs" ];
-                })
-              ];
-              config = {
-                # Multi-process container or just one entrypoint?
-                # For unified image, we might want a supervisor, but for now let's default to the Go service
-                Cmd = [ "/bin/marketing-service" ]; 
-                Env = [ "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt" ];
-              };
-            };
 
 
         };

@@ -7,6 +7,7 @@
     ../../modules/medusa.nix
     ../../modules/storefront.nix
     ../../modules/marketing-service.nix
+    ../../modules/strapi.nix
     inputs.sops-nix.nixosModules.sops
   ];
 
@@ -148,6 +149,12 @@
   services.marketing-service = {
     enable = true;
     port = 8080;
+  };
+  
+  services.strapi = {
+    enable = true;
+    port = 1337;
+    databaseUrl = "postgres://strapi@localhost/strapi";
   };
 
   # ==========================================================================
