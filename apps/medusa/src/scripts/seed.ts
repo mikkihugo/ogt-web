@@ -120,7 +120,95 @@ export default async function seedDemo(container: MedusaContainer, args: ExecArg
       })
 
       logger.info(`Created ${p.title} with image`)
+
+      // 4. Inventory (Critical for Checkout)
+      const variant = product.variants[0]
+      const inventoryItem = await inventoryModule.createInventoryItems({
+        sku: `${p.handle}-sku`,
+        requires_shipping: true
+      })
+
+      // Link Variant to Inventory Item
+      // (In Medusa v2 this is via Remote Link or specific service, assuming standard link name)
+      await link.create({
+        productService: {
+          variant_id: variant.id,
+        },
+        inventoryService: {
+          inventory_item_id: inventoryItem.id,
+        },
+      })
+
+      // Add Stock to default location (we need a location first? default usually exists or we create one)
+      const [locations] = await stockLocationModule.listStockLocations()
+      let locationId = locations[0]?.id
+
+      if (!locationId) {
+        const loc = await stockLocationModule.createStockLocations({ name: "Default Warehouse" })
+        locationId = loc.id
+        // Link Sales Channel to Stock Location (required for visibility)
+        // Sales Channel -> Stock Location link
+        await link.create({
+          salesChannelService: {
+            sales_channel_id: scOrgasmToy.id // Link to both?
+          },
+          stockLocationService: {
+            stock_location_id: locationId
+          }
+        })
+        await link.create({
+          salesChannelService: {
+            sales_channel_id: scOwnOrgasm.id
+          },
+          stockLocationService: {
+            stock_location_id: locationId
+          }
+        })
+      }
+
+      await inventoryModule.createInventoryLevels({
+        inventory_item_id: inventoryItem.id,
+        location_id: locationId,
+        stocked_quantity: 100
+      })
     }
+  }
+
+  // 5. Collections with Images (for Site Content)
+  logger.info("Creating collections with images...")
+  const collectionsData = [
+    { title: "Summer Vibes", handle: "summer-vibes", image: "https://dummyimage.com/800x300/ff69b4/fff&text=Summer+Vibes" },
+    { title: "Essentials", handle: "essentials", image: "https://dummyimage.com/800x300/333/fff&text=Essentials" }
+  ]
+
+  for (const c of collectionsData) {
+    // Upload Image
+    let imageUrl = ""
+    try {
+      const response = await fetch(c.image)
+      const blob = await response.blob()
+      const arrayBuffer = await blob.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
+      const file = await fileModule.createFiles({
+        files: [{
+          filename: `${c.handle}-col.png`,
+          mimeType: "image/png",
+          content: buffer.toString("base64"),
+        }]
+      })
+      imageUrl = file[0].url
+    } catch (e) {
+      logger.warn(`Failed to upload image for collection ${c.title}: ${e.message}`)
+    }
+
+    await productModule.createCollections({
+      title: c.title,
+      handle: c.handle,
+      metadata: {
+        image: imageUrl // Storefront can read this
+      }
+    })
   }
 
   logger.info("✅ Seeding complete.")
