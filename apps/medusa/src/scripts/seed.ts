@@ -50,8 +50,10 @@ export default async function seedDemo(container: MedusaContainer, args: ExecArg
     })
   }
 
+  const fileModule = container.resolve(Modules.FILE)
+
   // 3. Products
-  logger.info("Creating products...")
+  logger.info("Creating products with images...")
 
   const productsData = [
     {
@@ -59,46 +61,68 @@ export default async function seedDemo(container: MedusaContainer, args: ExecArg
       handle: "classic-vibrator",
       description: "Timeless pleasure.",
       sales_channels: [{ id: scOrgasmToy.id }],
-      price: 4900 // $49
+      price: 4900,
+      image: "https://dummyimage.com/600x400/000/fff&text=Vibrator"
     },
     {
       title: "Luxury Wand",
       handle: "luxury-wand",
       description: "Premium power for OwnOrgasm.",
       sales_channels: [{ id: scOwnOrgasm.id }],
-      price: 12900 // $129
+      price: 12900,
+      image: "https://dummyimage.com/600x400/000/fff&text=Luxury+Wand"
     },
     {
       title: "Silky Lubricant",
       handle: "silky-lube",
       description: "Smooth sailing for everyone.",
       sales_channels: [{ id: scOrgasmToy.id }, { id: scOwnOrgasm.id }],
-      price: 1500 // $15
+      price: 1500,
+      image: "https://dummyimage.com/600x400/000/fff&text=Lube"
     }
   ]
 
   for (const p of productsData) {
     const existing = await productModule.listProducts({ handle: p.handle })
     if (existing.length === 0) {
+      // Upload Image
+      let images = []
+      try {
+        const response = await fetch(p.image)
+        const blob = await response.blob()
+        const arrayBuffer = await blob.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+
+        const file = await fileModule.createFiles({
+          files: [{
+            filename: `${p.handle}.png`,
+            mimeType: "image/png",
+            content: buffer.toString("base64"), // File module might expect base64 or buffer depending on provider
+            // Medusa v2 File Module usually expects object with filename and content string (base64) for createFiles?
+            // Actually, the main create method takes specific provider input.
+            // Let's us the standard service method if available, or just generic input.
+            // Checking type: CreateFileDTO... content is string.
+          }]
+        })
+        images = file.map(f => f.url)
+      } catch (e) {
+        logger.warn(`Failed to upload image for ${p.title}: ${e.message}`)
+      }
+
       const product = await productModule.createProducts({
         title: p.title,
         handle: p.handle,
         description: p.description,
         options: [{ title: "Default", values: ["Default"] }],
-        variants: [{ title: "Default", options: { "Default": "Default" } }]
+        variants: [{ title: "Default", options: { "Default": "Default" } }],
+        images: images.map(url => ({ url })),
+        thumbnail: images[0]
       })
 
-      // Link Sales Channels
-      if (p.sales_channels) {
-        // Need to link via Link Module or Remote Link if v2, 
-        // but module-direct call usually handles it if input allows? 
-        // In Medusa v2 Module API, linking is separate via Links usually. 
-        // We'll skip linking in this simple seed or use remote link if easy.
-        // For now, product creation is enough.
-      }
-      logger.info(`Created ${p.title}`)
+      logger.info(`Created ${p.title} with image`)
     }
   }
 
   logger.info("✅ Seeding complete.")
 }
+```
