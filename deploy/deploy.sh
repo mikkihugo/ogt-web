@@ -47,7 +47,7 @@ docker compose up -d
 docker compose exec -T medusa yarn medusa db:migrate
 
 # Create admin user (will fail silently if already exists)
-docker compose exec -T medusa yarn medusa user -e "\${MEDUSA_ADMIN_EMAIL:-mhugo@ownorgasm.com}" -p "\${MEDUSA_ADMIN_PASSWORD:-BNgh9981}" || true
+docker compose exec -T medusa yarn medusa user -e "\${MEDUSA_ADMIN_EMAIL:-mhugo@ownorgasm.com}" -p "\${MEDUSA_ADMIN_PASSWORD}" || true
 
 echo "==> Deployment complete!"
 docker compose ps

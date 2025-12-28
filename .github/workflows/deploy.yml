@@ -58,11 +58,15 @@ jobs:
 
       - name: Deploy to Hetzner
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          MEDUSA_ADMIN_PASSWORD: ${{ secrets.MEDUSA_ADMIN_PASSWORD }}
         with:
           host: ${{ env.SERVER_IP }}
           username: ${{ env.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: MEDUSA_ADMIN_PASSWORD
           script: |
+            export MEDUSA_ADMIN_PASSWORD=$MEDUSA_ADMIN_PASSWORD
             # Only ensure directory exists
             mkdir -p /opt/ogt
             
