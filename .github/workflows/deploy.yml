@@ -74,6 +74,8 @@ jobs:
           file: apps/storefront-next/Dockerfile
           platforms: linux/arm64
           push: true
+          build-args: |
+            NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://admin.ownorgasm.com
           tags: ${{ env.REGISTRY }}/mikkihugo/ogt/storefront:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -142,7 +144,6 @@ jobs:
                   MINIO_ROOT_USER: minioadmin
                   MINIO_ROOT_PASSWORD: ${{ secrets.MEDUSA_ADMIN_PASSWORD }}
                 volumes: [minio_data:/data]
-                ports: ["9001:9001", "9000:9000"]
                 networks: [ogt]
 
               medusa:
