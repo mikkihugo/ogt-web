@@ -82,11 +82,12 @@
       port = 8080;
     };
     
-    strapi = {
-      enable = true;
-      port = 1337;
-      databaseUrl = "postgres://strapi@localhost/strapi";
-    };
+    # Strapi - TODO: needs Nix package like medusa
+    # strapi = {
+    #   enable = true;
+    #   port = 1337;
+    #   databaseUrl = "postgres://strapi@localhost/strapi";
+    # };
   };
 
   # ==========================================================================
