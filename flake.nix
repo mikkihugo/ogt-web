@@ -10,9 +10,9 @@
 #
 # USAGE:
 #   nix develop                         # Enter development shell
-#   yarn install                        # Install dependencies
-#   yarn dev                            # Start dev server
-#   yarn build                          # Build for production
+#   npm install                         # Install dependencies
+#   npm run dev                         # Start dev server
+#   npm run build                       # Build for production
 #
 #
 # =============================================================================
@@ -296,7 +296,7 @@
             type = "app";
             program = toString (pkgs.writeShellScript "seed" ''
               echo "Seeding Medusa database..."
-              yarn seed
+              npm run seed
             '');
           };
 
