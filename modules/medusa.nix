@@ -63,7 +63,7 @@ in
         ln -sfn ${medusaPackage}/node_modules /var/lib/medusa/node_modules
         
         cd /var/lib/medusa
-        exec ${pkgs.nodejs_22}/bin/node node_modules/@medusajs/medusa/dist/index.js start
+        exec ${pkgs.nodejs_22}/bin/node node_modules/@medusajs/cli/cli.js start
       '';
       
       serviceConfig = {
