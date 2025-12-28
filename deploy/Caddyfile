@@ -1,11 +1,18 @@
-# Storefront
-orgasmtoy.com, www.orgasmtoy.com {
-    reverse_proxy storefront:4321
-    encode gzip
+{
+    email support@ownorgasm.com
 }
 
-# Medusa API + Admin (admin at /app)
-api.orgasmtoy.com {
+# --- Admin & API ---
+admin.ownorgasm.com {
     reverse_proxy medusa:9000
-    encode gzip
+}
+
+# --- Shop 1: OwnOrgasm ---
+ownorgasm.com, www.ownorgasm.com {
+    reverse_proxy storefront:3000
+}
+
+# --- Shop 2: OrgasmToy ---
+orgasmtoy.com, www.orgasmtoy.com {
+    reverse_proxy storefront:3000
 }

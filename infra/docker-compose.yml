@@ -1,0 +1,141 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.8
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+    ports:
+      - "7700:7700"
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+    volumes:
+      - minio_data:/data
+
+  chatwoot-web:
+    image: chatwoot/chatwoot:latest
+    environment:
+      RAILS_ENV: production
+      SECRET_KEY_BASE: ${CHATWOOT_SECRET_KEY_BASE}
+      POSTGRES_HOST: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: chatwoot_db
+      REDIS_URL: redis://redis:6379
+      FRONTEND_URL: https://support.${BASE_DOMAIN}
+    depends_on: [postgres, redis]
+    ports:
+      - "3000:3000"
+    command: bundle exec rails s -p 3000 -b 0.0.0.0
+
+  chatwoot-worker:
+    image: chatwoot/chatwoot:latest
+    environment:
+      RAILS_ENV: production
+      SECRET_KEY_BASE: ${CHATWOOT_SECRET_KEY_BASE}
+      POSTGRES_HOST: postgres
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: chatwoot_db
+      REDIS_URL: redis://redis:6379
+    depends_on: [postgres, redis]
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+  strapi:
+    image: strapi/strapi:latest
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: strapi_db
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${STRAPI_JWT_SECRET}
+      ADMIN_JWT_SECRET: ${STRAPI_ADMIN_JWT_SECRET}
+    depends_on: [postgres]
+    ports:
+      - "1337:1337"
+    volumes:
+      - ./../../apps/strapi:/srv/app
+
+  medusa:
+    image: localhost/medusa:latest
+    build: 
+      context: ../../apps/medusa
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/medusa_db
+      REDIS_URL: redis://redis:6379
+      OPS_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ops_db
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    depends_on: [postgres, redis, meilisearch, minio]
+    ports:
+      - "9000:9000"
+
+  storefront-next:
+    image: localhost/storefront-next:latest
+    build:
+      context: ../../apps/storefront-next
+      dockerfile: Dockerfile
+    environment:
+      SHOP_RESOLVER_URL: http://medusa:9000
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: https://api.${BASE_DOMAIN}
+      NEXT_PUBLIC_STRAPI_URL: https://cms.${BASE_DOMAIN}
+    depends_on: [medusa]
+    ports:
+      - "8000:3000"
+
+  marketing-service:
+    image: localhost/marketing-service:latest
+    build:
+      context: ../../apps/marketing-service-go
+      dockerfile: Dockerfile
+    environment:
+      OPS_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ops_db
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+    depends_on: [postgres]
+    ports:
+      - "8080:8080"
+
+  caddy:
+    image: caddy:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+
+volumes:
+  pg_data:
+  minio_data:
+  caddy_data:

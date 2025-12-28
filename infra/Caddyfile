@@ -1,0 +1,19 @@
+api.{$BASE_DOMAIN} {
+  reverse_proxy medusa:9000
+}
+
+shop.{$BASE_DOMAIN} {
+  reverse_proxy storefront-next:3000
+}
+
+cms.{$BASE_DOMAIN} {
+  reverse_proxy strapi:1337
+}
+
+support.{$BASE_DOMAIN} {
+  reverse_proxy chatwoot-web:3000
+}
+
+marketing.{$BASE_DOMAIN} {
+  reverse_proxy marketing-service:8080
+}

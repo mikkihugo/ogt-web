@@ -60,9 +60,9 @@ services:
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-change_me_jwt_secret_123}
       COOKIE_SECRET: ${COOKIE_SECRET:-change_me_cookie_secret_123}
-      STORE_CORS: https://orgasmtoy.com,https://www.orgasmtoy.com
-      ADMIN_CORS: https://api.orgasmtoy.com
-      AUTH_CORS: https://orgasmtoy.com,https://api.orgasmtoy.com
+      STORE_CORS: https://orgasmtoy.com,https://www.orgasmtoy.com,https://ownorgasm.com,https://www.ownorgasm.com
+      ADMIN_CORS: https://admin.ownorgasm.com
+      AUTH_CORS: https://orgasmtoy.com,https://ownorgasm.com,https://admin.ownorgasm.com
       STRIPE_API_KEY: ${STRIPE_API_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
     depends_on:
@@ -79,7 +79,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PUBLIC_MEDUSA_BACKEND_URL: https://api.orgasmtoy.com
+      PUBLIC_MEDUSA_BACKEND_URL: https://admin.ownorgasm.com
       PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_9bbc0e89a415e5ebf093fd916f398ddf5ac7ef3e43b5c73d394a8b540cf7a95e
     depends_on:
       - medusa
