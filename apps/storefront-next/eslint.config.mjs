@@ -25,10 +25,12 @@ const nextConfigFlat = Array.isArray(nextCoreWebVitals)
 
 
 const eslintConfig = [
+    {
+        ignores: ["**/.next/**", "**/node_modules/**", "**/out/**", "**/dist/**"],
+    },
     js.configs.recommended,
     ...nextConfigFlat,
     {
-        ignores: [".next/*", "node_modules/*"],
         languageOptions: {
             globals: {
                 ...globals.browser,
