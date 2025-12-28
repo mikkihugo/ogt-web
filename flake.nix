@@ -181,7 +181,7 @@
           src = ./.;
           
           # NPM configuration - hash will be recalculated
-          npmDepsHash = "";
+          npmDepsHash = "sha256-pKhIPi2SSiMDcwjSTQqHBOMkkBO4PHnBinwCUsfydU8=";
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;  # We handle build in buildPhase
