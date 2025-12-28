@@ -17,7 +17,7 @@ env:
 
 jobs:
   build-medusa:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -51,7 +51,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   build-storefront:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -87,7 +87,7 @@ jobs:
 
   deploy:
     needs: [build-medusa, build-storefront]
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
