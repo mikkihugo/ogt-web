@@ -1,13 +1,22 @@
-import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework";
+import type {
+  AuthenticatedMedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework";
 import { OpsDb } from "../../../../modules/ops/service";
 
-export async function GET(req: AuthenticatedMedusaRequest, res: MedusaResponse) {
+export async function GET(
+  req: AuthenticatedMedusaRequest,
+  res: MedusaResponse,
+) {
   const ops = OpsDb.getInstance();
   const shops = await ops.listShops();
   res.json({ shops });
 }
 
-export async function POST(req: AuthenticatedMedusaRequest, res: MedusaResponse) {
+export async function POST(
+  req: AuthenticatedMedusaRequest,
+  res: MedusaResponse,
+) {
   const {
     id,
     name,

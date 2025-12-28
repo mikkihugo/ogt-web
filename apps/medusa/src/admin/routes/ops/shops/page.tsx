@@ -85,7 +85,7 @@ const ShopManagement = () => {
                   ...editing,
                   marketing_config: JSON.parse(e.target.value),
                 });
-              } catch { }
+              } catch {}
             }}
           />
 
@@ -99,7 +99,7 @@ const ShopManagement = () => {
                   ...editing,
                   theme_config: JSON.parse(e.target.value),
                 });
-              } catch { }
+              } catch {}
             }}
           />
 

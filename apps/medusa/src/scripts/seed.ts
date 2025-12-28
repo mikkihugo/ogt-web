@@ -106,7 +106,7 @@ export default async function seedDemo(
         ]);
         images = file.map((f) => f.url);
       } catch (e) {
-        const err = e as Error
+        const err = e as Error;
         logger.warn(`Failed to upload image for ${p.title}: ${err.message}`);
       }
 
@@ -214,8 +214,10 @@ export default async function seedDemo(
       ]);
       imageUrl = file[0].url;
     } catch (e) {
-      const err = e as Error
-      logger.warn(`Failed to upload image for collection ${c.title}: ${err.message}`);
+      const err = e as Error;
+      logger.warn(
+        `Failed to upload image for collection ${c.title}: ${err.message}`,
+      );
     }
 
     await (productModule as any).createCollections({

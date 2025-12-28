@@ -1,7 +1,13 @@
-import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework";
+import type {
+  AuthenticatedMedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework";
 import { OpsDb } from "../../../modules/ops/service";
 
-export async function GET(req: AuthenticatedMedusaRequest, res: MedusaResponse) {
+export async function GET(
+  req: AuthenticatedMedusaRequest,
+  res: MedusaResponse,
+) {
   const token = req.headers["x-internal-token"];
   if (!token || token !== process.env.INTERNAL_API_TOKEN) {
     return res.status(401).json({ error: "unauthorized" });

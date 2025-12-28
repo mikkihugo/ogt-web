@@ -207,7 +207,9 @@ export class OrderRoutingService {
       );
     } catch (e) {
       // Non-blocking logging failure
-      this.logger?.warn(`Failed to log routing decision history: ${(e as Error).message}`);
+      this.logger?.warn(
+        `Failed to log routing decision history: ${(e as Error).message}`,
+      );
     }
   }
 }

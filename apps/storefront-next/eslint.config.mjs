@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 const compat = new FlatCompat({
-    baseDirectory: __dirname,
+  baseDirectory: __dirname,
 });
 
 // Manually resolve eslint-config-next to avoid resolution errors
@@ -19,30 +19,28 @@ const compat = new FlatCompat({
 const nextCoreWebVitals = require("eslint-config-next/core-web-vitals");
 
 const nextConfigFlat = Array.isArray(nextCoreWebVitals)
-    ? nextCoreWebVitals
-    : compat.config(nextCoreWebVitals);
-
-
+  ? nextCoreWebVitals
+  : compat.config(nextCoreWebVitals);
 
 const eslintConfig = [
-    {
-        ignores: ["**/.next/**", "**/node_modules/**", "**/out/**", "**/dist/**"],
+  {
+    ignores: ["**/.next/**", "**/node_modules/**", "**/out/**", "**/dist/**"],
+  },
+  js.configs.recommended,
+  ...nextConfigFlat,
+  {
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
     },
-    js.configs.recommended,
-    ...nextConfigFlat,
-    {
-        languageOptions: {
-            globals: {
-                ...globals.browser,
-                ...globals.node,
-            },
-        },
-        rules: {
-            "react/no-unescaped-entities": "off",
-            "react/react-in-jsx-scope": "off",
-            "no-undef": "off", // TypeScript handles this
-        },
+    rules: {
+      "react/no-unescaped-entities": "off",
+      "react/react-in-jsx-scope": "off",
+      "no-undef": "off", // TypeScript handles this
     },
+  },
 ];
 
 export default eslintConfig;
