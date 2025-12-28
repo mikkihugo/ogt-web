@@ -7,7 +7,7 @@ import {
   Input,
   Textarea,
   Toaster,
-  useToast,
+  toast,
 } from "@medusajs/ui";
 import { useState, useEffect } from "react";
 import { RouteConfig } from "@medusajs/admin";
@@ -25,7 +25,6 @@ type Shop = {
 const ShopManagement = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   // Fetch on Mount
   useEffect(() => {
@@ -36,10 +35,8 @@ const ShopManagement = () => {
         setLoading(false);
       })
       .catch((err) =>
-        toast({
-          title: "Error",
+        toast.error("Error", {
           description: "Failed to load shops",
-          variant: "error",
         }),
       );
   }, []);
@@ -55,10 +52,10 @@ const ShopManagement = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(shop),
       });
-      toast({ title: "Success", description: "Shop saved" });
+      toast.success("Success", { description: "Shop saved" });
       window.location.reload();
     } catch (e) {
-      toast({ title: "Error", description: "Save failed", variant: "error" });
+      toast.error("Error", { description: "Save failed" });
     }
   };
 
@@ -85,7 +82,7 @@ const ShopManagement = () => {
                   ...editing,
                   marketing_config: JSON.parse(e.target.value),
                 });
-              } catch {}
+              } catch { }
             }}
           />
 
@@ -99,7 +96,7 @@ const ShopManagement = () => {
                   ...editing,
                   theme_config: JSON.parse(e.target.value),
                 });
-              } catch {}
+              } catch { }
             }}
           />
 
