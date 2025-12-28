@@ -52,7 +52,12 @@ in
       
       # Use the pre-built medusa package
       script = ''
-        cd ${medusaPackage}
+        # Link config to state dir and run from there
+        ln -sf ${medusaPackage}/medusa-config.js /var/lib/medusa/medusa-config.js
+        ln -sf ${medusaPackage}/package.json /var/lib/medusa/package.json
+        ln -sf ${medusaPackage}/node_modules /var/lib/medusa/node_modules
+        
+        cd /var/lib/medusa
         exec ${pkgs.nodejs_22}/bin/node node_modules/@medusajs/medusa/dist/index.js start
       '';
       
