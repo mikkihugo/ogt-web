@@ -65,3 +65,26 @@ clean:
     rm -rf apps/medusa/.turbo apps/medusa/dist
     rm -rf apps/storefront-next/.next apps/storefront-next/.turbo
 
+# --- CI Monitoring ---
+
+# Watch live logs of the latest run (Interactive)
+watch:
+    gh run watch
+
+# Poll status every 30s (Non-interactive)
+monitor:
+    @echo "Monitoring latest run (Ctrl+C to stop)..."
+    @while true; do \
+        RUN=$(gh run list --limit 1 --json databaseId,status,conclusion,startedAt --jq '.[0]'); \
+        ID=$(echo $$RUN | jq -r .databaseId); \
+        STATUS=$(echo $$RUN | jq -r .status); \
+        RESULT=$(echo $$RUN | jq -r .conclusion); \
+        TIME=$(echo $$RUN | jq -r .startedAt); \
+        echo "[$(date +%T)] Run $$ID: $$STATUS ($$RESULT) - Started: $$TIME"; \
+        if [ "$$STATUS" = "completed" ]; then \
+            echo "✅ Run completed with result: $$RESULT"; \
+            break; \
+        fi; \
+        sleep 30; \
+    done
+
