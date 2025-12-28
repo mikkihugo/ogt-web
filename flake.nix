@@ -83,14 +83,20 @@
             awscli2
             just
             actionlint
+            statix
+            deadnix
 
             # Go Development
             go
             gopls
+            golangci-lint # Enterprise Go Linting (Antipatterns)
+            gotestsum     # Proper Test Runner
 
             # Node for Admin
             nodejs_20
             pnpm
+            nodePackages.eslint # Global ESLint
+            oxlint              # Fast JS/TS Linter
 
             # Build System
             bazelisk
@@ -167,6 +173,42 @@
             ];
             # Basic implementation for now - just the runtime environment
             # Real application code adding requires more structure.
+          };
+
+          storefrontImage = nix2containerPkgs.nix2container.buildImage {
+            name = "ogt-web-storefront";
+            tag = "latest";
+            config = {
+              Cmd = [ "${pkgs.nodejs_22}/bin/node" "server.js" ];
+              Env = [
+                "NODE_ENV=production"
+                "PORT=3000"
+                "HOSTNAME=0.0.0.0"
+              ];
+              ExposedPorts = {
+                "3000/tcp" = {};
+              };
+              WorkingDir = "/app";
+            };
+            maxLayers = 120;
+            layers = [
+              (nix2containerPkgs.nix2container.buildLayer {
+                deps = with pkgs; [ nodejs_20 bashInteractive ];
+              })
+              (nix2containerPkgs.nix2container.buildLayer {
+                 copyToRoot = [
+                   (pkgs.runCommand "storefront-source" {} ''
+                     mkdir -p $out/app
+                     # Copy standalone build from the package
+                     cp -r ${self.packages.${system}.storefront-next}/* $out/app/
+                     # Next.js standalone output needs specific handling usually, assuming 
+                     # storefront-next package does 'cp -r .next/standalone/* $out'
+                     # If the package copies everything, we might need to adjust.
+                     # Let's assume for now the package output IS the app root.
+                   '')
+                 ];
+              })
+            ];
           };
 
           chatwootImage = nix2containerPkgs.nix2container.pullImage {

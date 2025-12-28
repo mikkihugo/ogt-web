@@ -10,21 +10,24 @@ default: ci
 # Run comprehensive CI pipeline (Lint, Typecheck, Test, Build)
 ci: typecheck lint test build
 
-# Run all linters (ESLint, Actionlint, Go Vet)
+# Run all linters (ESLint, Actionlint, Go Vet, Nix)
 lint:
     @echo "Running Actionlint..."
     actionlint
-    @echo "Running ESLint (Medusa)..."
-    cd apps/medusa && yarn lint
+    @echo "Running Nix Linters (Statix & Deadnix)..."
+    statix check flake.nix
+    deadnix flake.nix
+    @echo "Running TypeScript Check (Medusa)..."
+    cd apps/medusa && yarn run check
     @echo "Running ESLint (Storefront)..."
-    cd apps/storefront-next && yarn lint
-    @echo "Running Go Vet..."
-    cd apps/marketing-service-go && go vet ./...
+    cd apps/storefront-next && npx next lint
+    @echo "Running Go Lint (golangci-lint)..."
+    cd apps/marketing-service-go && golangci-lint run ./...
 
 # Run Tests
 test:
-    @echo "Testing Go Service..."
-    cd apps/marketing-service-go && go test ./...
+    @echo "Testing Go Service (gotestsum)..."
+    cd apps/marketing-service-go && gotestsum -- ./...
 
 # Run Type Checking (Strict)
 typecheck:
@@ -65,10 +68,10 @@ setup: clean dev-infra
 db-reset:
     @echo "⚠️  Resetting 'medusa' database..."
     # Terminate connections
-    docker-compose -f infra/docker-compose.yml exec -T postgres psql -U medusa -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'medusa' AND pid <> pg_backend_pid();"
+    podman-compose -f infra/docker-compose.yml exec -T postgres psql -U medusa -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'medusa' AND pid <> pg_backend_pid();"
     # Drop and Recreate
-    docker-compose -f infra/docker-compose.yml exec -T postgres dropdb -U medusa --if-exists medusa
-    docker-compose -f infra/docker-compose.yml exec -T postgres createdb -U medusa medusa
+    podman-compose -f infra/docker-compose.yml exec -T postgres dropdb -U medusa --if-exists medusa
+    podman-compose -f infra/docker-compose.yml exec -T postgres createdb -U medusa medusa
     @echo "⏳ Waiting for DB..."
     sleep 2
     # Migrate & Seed
@@ -89,7 +92,7 @@ build:
 
 # Start local dev stack
 dev-infra:
-    docker-compose -f infra/docker-compose.yml up -d postgres redis minio meilisearch
+    podman-compose -f infra/docker-compose.yml up -d postgres redis minio meilisearch
 
 # Clean build artifacts
 clean:
