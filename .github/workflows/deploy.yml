@@ -16,11 +16,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up QEMU for aarch64 emulation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
+            extra-sandbox-paths = /run/binfmt
 
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@main
