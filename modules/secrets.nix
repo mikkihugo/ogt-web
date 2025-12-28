@@ -30,9 +30,9 @@ with lib;
         "stripe/api_key" = {};
         "stripe/webhook_secret" = {};
         
-        # MinIO
-        "minio/root_user" = {};
-        "minio/root_password" = {};
+        # MinIO (matching secrets.yaml structure)
+        "minio/access_key" = {};
+        "minio/secret_key" = {};
         
         # Gemini AI
         "gemini/api_key" = {};

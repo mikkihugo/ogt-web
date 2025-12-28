@@ -25,7 +25,7 @@ with lib;
       enable = true;
       listenAddress = "127.0.0.1:${toString config.ogt.storage.listenPort}";
       consoleAddress = "127.0.0.1:${toString config.ogt.storage.consolePort}";
-      rootCredentialsFile = config.sops.secrets."minio/root_password".path;
+      rootCredentialsFile = config.sops.secrets."minio/secret_key".path;
     };
   };
 }
