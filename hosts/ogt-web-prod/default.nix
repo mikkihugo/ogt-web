@@ -31,6 +31,8 @@
   # Nix Configuration
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.auto-optimise-store = true; # Deduplicate files
+  nix.settings.cores = 3; # Reserve 1 core (System has 4)
+  nix.settings.max-jobs = 1; # Sequential builds to save RAM
   nix.gc = {
     automatic = true;
     dates = "weekly";
