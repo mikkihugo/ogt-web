@@ -190,6 +190,7 @@
             pkgs.pkg-config 
             pkgs.python3
             pkgs.util-linux
+            pkgs.nodePackages.node-gyp
           ];
           
           buildInputs = [
@@ -225,7 +226,7 @@
           pname = "marketing-service";
           version = "1.0.0";
           src = ./apps/marketing-service-go;
-          vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+          vendorHash = "sha256-y8EArq0xwXxAzA5df1drkAbEzkwFEMXk5U4HJ67DDi4=";
         };
 
   # 2. Storefront Builder
