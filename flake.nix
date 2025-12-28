@@ -69,8 +69,8 @@
             # Deployment & DevOps
             hcloud
             terraform
-            docker
-            docker-compose
+            podman
+            podman-compose
 
             # Secrets management
             git
@@ -106,11 +106,12 @@
 
             echo "🛒 OGT-Web Medusa.js Dev Shell"
             echo "Node.js $(node --version) | Yarn $(yarn --version 2>/dev/null || echo 'corepack') | PostgreSQL 18 (GIS, Timescale, Vector, Trigram, Cron)"
+            echo "Container Engine: Podman"
             echo ""
             echo "Commands:"
-            echo "  yarn install     # Install dependencies"
+            echo "  just setup       # Initialize environment"
+            echo "  just dev-infra   # Start infrastructure (Podman)"
             echo "  yarn dev         # Start development server"
-            echo "  yarn build       # Build for production"
             echo ""
             echo "Secrets are managed via git-crypt and .env.encrypted only."
 
@@ -255,10 +256,10 @@
           dev = {
             type = "app";
             program = toString (pkgs.writeShellScript "dev" ''
-              export PATH="${pkgs.docker-compose}/bin:${pkgs.caddy}/bin:${pkgs.docker}/bin:$PATH"
+              export PATH="${pkgs.podman-compose}/bin:${pkgs.caddy}/bin:${pkgs.podman}/bin:$PATH"
               
               echo "📦 Starting Infrastructure (Postgres, Redis, MinIO)..."
-              docker-compose -f infra/docker-compose.yml up -d postgres redis minio meilisearch
+              podman-compose -f infra/docker-compose.yml up -d postgres redis minio meilisearch
 
               echo "⏳ Waiting for DB..."
               sleep 3
