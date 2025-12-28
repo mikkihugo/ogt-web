@@ -44,6 +44,22 @@ fmt:
 fmt-check:
     nix develop --command bash -c "prettier --check ."
 
+# --- Agent / Fast Feedback Loop ---
+
+# Fast Verification (Typecheck only - < 10s)
+check: typecheck
+
+# Full Environment Setup (Safe - No Data Loss)
+# Usage: just setup
+setup: clean dev-infra
+    @echo "⏳ Waiting for DB to be healthy..."
+    sleep 5
+    @echo "Running Migrations..."
+    cd apps/medusa && npx medusa db:migrate
+    @echo "Seeding Database..."
+    cd apps/medusa && npx medusa exec ./src/scripts/seed.ts
+    @echo "✅ Setup Complete!"
+
 # --- Build & Deploy ---
 
 # Build all applications via Nix
