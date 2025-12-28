@@ -27,14 +27,18 @@ func main() {
 
     mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(200)
-        w.Write([]byte("ok"))
+        if _, err := w.Write([]byte("ok")); err != nil {
+            log.Printf("Failed to write response: %v", err)
+        }
     })
 
     // Placeholder for Google Ads Campaigns
     mux.HandleFunc("/api/marketing/google/campaigns", func(w http.ResponseWriter, r *http.Request) {
         // Validation would go here
         w.WriteHeader(501)
-        w.Write([]byte("not implemented"))
+        if _, err := w.Write([]byte("not implemented")); err != nil {
+            log.Printf("Failed to write response: %v", err)
+        }
     })
 
 	port := os.Getenv("PORT")
@@ -44,7 +48,9 @@ func main() {
 
 	log.Printf("Server listening on :%s", port)
     // Add Auth Middleware
-	http.ListenAndServe(":"+port, authMiddleware(mux, os.Getenv("INTERNAL_API_TOKEN")))
+	if err := http.ListenAndServe(":"+port, authMiddleware(mux, os.Getenv("INTERNAL_API_TOKEN"))); err != nil {
+        log.Fatalf("Server failed: %v", err)
+    }
 }
 
 func authMiddleware(next http.Handler, token string) http.Handler {

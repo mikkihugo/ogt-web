@@ -64,7 +64,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Route("/api", func(r chi.Router) {
-		// 1. Products Endpoint (for Refine Admin)
+			// 1. Products Endpoint (for Refine Admin)
 		r.Get("/products", func(w http.ResponseWriter, r *http.Request) {
 			// Mocking DB query for now since table structure isn't confirmed
 			// rows, _ := pool.Query(context.Background(), "SELECT sku, qty, cost FROM inventory")
@@ -77,13 +77,17 @@ func main() {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(items)
+			if err := json.NewEncoder(w).Encode(items); err != nil {
+                log.Printf("Failed to encode response: %v", err)
+            }
 		})
 
 		// 2. Sync Trigger
 		r.Post("/sync", func(w http.ResponseWriter, r *http.Request) {
 			go runSync()
-			w.Write([]byte("Sync job started in background"))
+			if _, err := w.Write([]byte("Sync job started in background")); err != nil {
+                log.Printf("Failed to write response: %v", err)
+            }
 		})
 
 		// 3. Tax Calculation Endpoint (for Storefront)
@@ -97,7 +101,9 @@ func main() {
 			taxAmount := calculateTax(req.CartTotal, req.CustomerState)
 			
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(TaxResponse{TaxAmount: taxAmount})
+			if err := json.NewEncoder(w).Encode(TaxResponse{TaxAmount: taxAmount}); err != nil {
+                log.Printf("Failed to encode response: %v", err)
+            }
 		})
 
         // 4. Marketing Report Endpoint
@@ -106,7 +112,9 @@ func main() {
             data := adsClient.GetCampaignPerformance()
             
             w.Header().Set("Content-Type", "application/json")
-            json.NewEncoder(w).Encode(data)
+            if err := json.NewEncoder(w).Encode(data); err != nil {
+                log.Printf("Failed to encode response: %v", err)
+            }
         })
 	})
 
@@ -121,7 +129,9 @@ func main() {
 	}
 
 	log.Printf("Server listening on :%s", port)
-	http.ListenAndServe(":"+port, r)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
+        log.Fatalf("Server failed: %v", err)
+    }
 }
 
 func runSync() {
@@ -173,7 +183,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem) {
 	}
 
 	if path != "/" && path[len(path)-1] != '/' {
-		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
 		path += "/"
 	}
 	path += "*"

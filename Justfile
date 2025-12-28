@@ -5,6 +5,10 @@
 # Default: Validation suite
 default: ci
 
+# Install Dependencies
+install:
+    npm install --legacy-peer-deps
+
 # --- Quality Gates ---
 
 # Run comprehensive CI pipeline (Lint, Typecheck, Test, Build)
@@ -18,9 +22,9 @@ lint:
     statix check flake.nix
     deadnix flake.nix
     @echo "Running TypeScript Check (Medusa)..."
-    cd apps/medusa && yarn run check
+    cd apps/medusa && npm run check
     @echo "Running ESLint (Storefront)..."
-    cd apps/storefront-next && npx next lint
+    cd apps/storefront-next && npm run lint
     @echo "Running Go Lint (golangci-lint)..."
     cd apps/marketing-service-go && golangci-lint run ./...
 
@@ -58,9 +62,9 @@ setup: clean dev-infra
     @echo "⏳ Waiting for DB to be healthy..."
     sleep 5
     @echo "Running Migrations..."
-    cd apps/medusa && npx medusa db:migrate
+    cd apps/medusa && npm run medusa db:migrate
     @echo "Seeding Database..."
-    cd apps/medusa && npx medusa exec ./src/scripts/seed.ts
+    cd apps/medusa && npm run medusa exec ./src/scripts/seed.ts
     @echo "✅ Setup Complete!"
 
 # Reset Database Only (Safe Drop/Create)
@@ -75,8 +79,8 @@ db-reset:
     @echo "⏳ Waiting for DB..."
     sleep 2
     # Migrate & Seed
-    cd apps/medusa && npx medusa db:migrate
-    cd apps/medusa && npx medusa exec ./src/scripts/seed.ts
+    cd apps/medusa && npm run medusa db:migrate
+    cd apps/medusa && npm run medusa exec ./src/scripts/seed.ts
     @echo "✅ Database Reset Complete"
 
 # --- Build & Deploy ---

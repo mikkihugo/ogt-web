@@ -1,0 +1,11 @@
+{
+    "name": "ogt-web-monorepo",
+    "private": true,
+    "workspaces": [
+        "apps/*"
+    ],
+    "scripts": {
+        "lint": "bun run --filter '*' lint",
+        "check": "bun run --filter '*' check"
+    }
+}

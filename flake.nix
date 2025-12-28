@@ -52,7 +52,6 @@
           buildInputs = with pkgs; [
             # Node.js runtime (Medusa requires Node 20+)
             nodejs_22
-            yarn
             nodePackages.typescript
             nodePackages.typescript-language-server
             nodePackages.prettier
@@ -93,8 +92,9 @@
             gotestsum     # Proper Test Runner
 
             # Node for Admin
-            nodejs_20
-            pnpm
+            nodejs_22
+            # bun commented out - using npm for consistency with Nix builds
+            # bun                 # Fast All-in-One Runtime & Manager
             nodePackages.eslint # Global ESLint
             oxlint              # Fast JS/TS Linter
 
@@ -110,14 +110,14 @@
             # Corepack disabled to prevent read-only filesystem errors
             # corepack enable 2>/dev/null || true
 
-            echo "🛒 OGT-Web Medusa.js Dev Shell"
-            echo "Node.js $(node --version) | Yarn $(yarn --version 2>/dev/null || echo 'corepack') | PostgreSQL 18 (GIS, Timescale, Vector, Trigram, Cron)"
+            echo "🛒 OGT-Web Medusa.js Dev Shell (Node.js + NPM)"
+            echo "Node $(node --version) | PostgreSQL 18 (GIS, Timescale, Vector, Trigram, Cron)"
             echo "Container Engine: Podman"
             echo ""
             echo "Commands:"
             echo "  just setup       # Initialize environment"
             echo "  just dev-infra   # Start infrastructure (Podman)"
-            echo "  yarn dev         # Start development server"
+            echo "  npm run dev      # Start development server"
             echo ""
             echo "Secrets are managed via git-crypt and .env.encrypted only."
 
@@ -141,7 +141,7 @@
         # =====================================================================
         # PACKAGES
         # =====================================================================
-        packages = {
+        packages = rec {
           dockerImage = nix2containerPkgs.nix2container.buildImage {
             name = "ogt-web-backend";
             tag = "latest";
@@ -175,41 +175,80 @@
             # Real application code adding requires more structure.
           };
 
-          storefrontImage = nix2containerPkgs.nix2container.buildImage {
-            name = "ogt-web-storefront";
-            tag = "latest";
-            config = {
-              Cmd = [ "${pkgs.nodejs_22}/bin/node" "server.js" ];
-              Env = [
-                "NODE_ENV=production"
-                "PORT=3000"
-                "HOSTNAME=0.0.0.0"
-              ];
-              ExposedPorts = {
-                "3000/tcp" = {};
-              };
-              WorkingDir = "/app";
-            };
-            maxLayers = 120;
-            layers = [
-              (nix2containerPkgs.nix2container.buildLayer {
-                deps = with pkgs; [ nodejs_20 bashInteractive ];
-              })
-              (nix2containerPkgs.nix2container.buildLayer {
-                 copyToRoot = [
-                   (pkgs.runCommand "storefront-source" {} ''
-                     mkdir -p $out/app
-                     # Copy standalone build from the package
-                     cp -r ${self.packages.${system}.storefront-next}/* $out/app/
-                     # Next.js standalone output needs specific handling usually, assuming 
-                     # storefront-next package does 'cp -r .next/standalone/* $out'
-                     # If the package copies everything, we might need to adjust.
-                     # Let's assume for now the package output IS the app root.
-                   '')
-                 ];
-              })
+        # 1. Storefront Builder (Standard NPM)
+        storefront-next = pkgs.buildNpmPackage {
+          name = "ogt-web-storefront";
+          src = ./.;
+          
+          # NPM configuration - hash will be recalculated
+          npmDepsHash = "";
+          makeCacheWritable = true;
+          npmFlags = [ "--legacy-peer-deps" ];
+          dontNpmBuild = true;  # We handle build in buildPhase
+          
+          nativeBuildInputs = [ 
+            pkgs.pkg-config 
+            pkgs.python3
+            pkgs.util-linux
+          ];
+          
+          buildInputs = [
+            pkgs.vips
+            pkgs.glib
+            pkgs.gcc
+            pkgs.gnumake
+          ];
+
+          buildPhase = ''
+            # Fix for sharp/node-gyp in Nix
+            export PYTHON=${pkgs.python3}/bin/python3
+            
+            npm run build --workspace=apps/storefront-next
+          '';
+
+          installPhase = ''
+            mkdir -p $out
+            
+            # Navigate to storefront
+            cd apps/storefront-next
+            
+            # Copy Next.js standalone build
+            cp -r .next/standalone/* $out/
+            mkdir -p $out/.next/static
+            cp -r .next/static $out/.next/static
+            cp -r public $out/public
+          '';
+        };
+
+        # 1. Build Go Marketing Service
+        marketing-service = pkgs.buildGoModule {
+          pname = "marketing-service";
+          version = "1.0.0";
+          src = ./apps/marketing-service-go;
+          vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+        };
+
+  # 2. Storefront Builder
+        storefrontImage = nix2containerPkgs.nix2container.buildImage {
+          name = "ogt-web-storefront";
+          tag = "latest";
+          copyToRoot = [ 
+            pkgs.nodejs_22 
+            (pkgs.runCommand "storefront-app" {} ''
+              mkdir -p $out/apps/storefront-next
+              cp -r ${storefront-next}/* $out/apps/storefront-next/
+            '')
+          ];
+          config = {
+            Cmd = [ "node" "apps/storefront-next/server.js" ];
+            WorkingDir = "/"; # Set working directory to root to make Cmd path robust
+            Env = [
+              "NODE_ENV=production"
+              "PORT=3000"
+              "HOSTNAME=0.0.0.0"
             ];
           };
+        };
 
           chatwootImage = nix2containerPkgs.nix2container.pullImage {
             imageName = "chatwoot/chatwoot";
@@ -260,25 +299,7 @@
               };
             };
 
-          # 1. Build Go Marketing Service
-          marketing-service = pkgs.buildGoModule {
-            pname = "marketing-service";
-            version = "1.0.0";
-            src = ./apps/marketing-service-go;
-            vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-          };
 
-          # 2. Build Next.js Storefront (Static/Standalone)
-          storefront-next = pkgs.buildNpmPackage {
-            pname = "storefront-next";
-            version = "1.0.0";
-            src = ./apps/storefront-next;
-            # Dummy hash for now, update after first failure
-            npmDepsHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; 
-            # Bypass build for scaffold if lockfile missing
-            dontNpmBuild = true; 
-            installPhase = "cp -r . $out";
-          };
         };
 
         # =====================================================================

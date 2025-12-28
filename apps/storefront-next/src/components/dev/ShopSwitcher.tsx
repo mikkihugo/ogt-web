@@ -1,38 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function DevShopSwitcher() {
-  const [shops, setShops] = useState<any[]>([]);
+  /* 
+     Dev Tool: Hardcoded shops for local development convenience.
+     These match the seeded data in apps/medusa/src/scripts/seed.ts.
+  */
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    // Find shops via the internal API (proxied via Next API route usually, but here we cheat for dev)
-    // In reality, this should be a public API or seeded data.
-    // For visual, I'll hardcode the known local domains since we seeded them.
-    setShops([
-      {
-        id: "orgasm_toy",
-        name: "OrgasmToy",
-        domain: "http://orgasmtoy.localhost",
-      },
-      {
-        id: "own_orgasm",
-        name: "OwnOrgasm",
-        domain: "http://ownorgasm.localhost",
-      },
-      {
-        id: "funnel_gadget",
-        name: "Funnel Test",
-        domain: "http://best-gadget-ever.localhost",
-      },
-      {
-        id: "admin_dashboard",
-        name: "Admin Dashboard",
-        domain: "http://admin.localhost/app",
-      },
-    ]);
-  }, []);
+  const shops = [
+    {
+      id: "orgasm_toy",
+      name: "OrgasmToy",
+      domain: "http://orgasmtoy.localhost",
+    },
+    {
+      id: "own_orgasm",
+      name: "OwnOrgasm",
+      domain: "http://ownorgasm.localhost",
+    },
+    {
+      id: "funnel_gadget",
+      name: "Funnel Test",
+      domain: "http://best-gadget-ever.localhost",
+    },
+    {
+      id: "admin_dashboard",
+      name: "Admin Dashboard",
+      domain: "http://admin.localhost/app",
+    },
+  ];
 
   if (process.env.NODE_ENV === "production") return null;
 
