@@ -7,6 +7,7 @@ module.exports = defineConfig({
     databaseUrl:
       process.env.DATABASE_URL ||
       "postgres://postgres:postgres@localhost:5432/medusa-db",
+    redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
     http: {
       storeCors:
         process.env.STORE_CORS || "http://localhost:8000,http://localhost:3000",

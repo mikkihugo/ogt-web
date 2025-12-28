@@ -25,11 +25,11 @@ with lib;
         ensureUsers = map (db: { name = db; ensureDBOwnership = true; }) config.ogt.database.databases
           ++ [{ name = "postgres"; }];
         
-        authentication = pkgs.lib.mkOverride 10 ''
-          local all all trust
-          host all all 127.0.0.1/32 md5
-          host all all ::1/128 md5
-        '';
+          authentication = pkgs.lib.mkOverride 10 ''
+            local all all trust
+            host all all 127.0.0.1/32 trust
+            host all all ::1/128 trust
+          '';
       };
       
       # Redis
