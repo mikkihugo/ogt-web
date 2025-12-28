@@ -108,6 +108,7 @@
 
             # Build System
             bazelisk
+            prefetch-npm-deps
           ];
 
           shellHook = ''

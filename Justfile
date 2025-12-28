@@ -104,6 +104,12 @@ clean:
     rm -rf apps/medusa/.turbo apps/medusa/dist
     rm -rf apps/storefront-next/.next apps/storefront-next/.turbo
 
+# Calculate npmDepsHash for Nix (package-lock.json)
+hash:
+    @echo "Computing npmDepsHash..."
+    prefetch-npm-deps package-lock.json
+
+
 # --- CI Monitoring ---
 
 # Watch live logs of the latest run (Interactive)
