@@ -27,7 +27,7 @@ jobs:
             cd /etc/nixos &&
             git fetch origin main &&
             git reset --hard origin/main &&
-            nixos-rebuild switch --flake .#ogt-web-prod 2>&1
+            nixos-rebuild switch --flake .#ogt-web-prod --accept-flake-config 2>&1
           "
 
       - name: Verify deployment

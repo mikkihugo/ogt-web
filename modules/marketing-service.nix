@@ -23,17 +23,20 @@ in
   config = mkIf cfg.enable {
     systemd.services.marketing-service = {
       description = "OGT Marketing Service (Go)";
-      after = [ "network.target" ];
+      after = [ "network.target" "postgresql.service" ];
       wantedBy = [ "multi-user.target" ];
       
       environment = {
         PORT = toString cfg.port;
-        DATABASE_URL = "postgres://postgres:$(cat /run/secrets/postgres_password)@localhost:5432/marketing";
       };
+      
+      script = ''
+        export DATABASE_URL="postgres://postgres:$(cat /run/secrets/postgres_password)@localhost:5432/marketing"
+        exec ${marketingPackage}/bin/marketing-service
+      '';
       
       serviceConfig = {
         Type = "simple";
-        ExecStart = "${marketingPackage}/bin/marketing-service";
         Restart = "on-failure";
         RestartSec = 5;
         
