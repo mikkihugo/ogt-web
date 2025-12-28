@@ -60,6 +60,22 @@ setup: clean dev-infra
     cd apps/medusa && npx medusa exec ./src/scripts/seed.ts
     @echo "✅ Setup Complete!"
 
+# Reset Database Only (Safe Drop/Create)
+# NOTE: Drops 'medusa' database but keeps server running
+db-reset:
+    @echo "⚠️  Resetting 'medusa' database..."
+    # Terminate connections
+    docker-compose -f infra/docker-compose.yml exec -T postgres psql -U medusa -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'medusa' AND pid <> pg_backend_pid();"
+    # Drop and Recreate
+    docker-compose -f infra/docker-compose.yml exec -T postgres dropdb -U medusa --if-exists medusa
+    docker-compose -f infra/docker-compose.yml exec -T postgres createdb -U medusa medusa
+    @echo "⏳ Waiting for DB..."
+    sleep 2
+    # Migrate & Seed
+    cd apps/medusa && npx medusa db:migrate
+    cd apps/medusa && npx medusa exec ./src/scripts/seed.ts
+    @echo "✅ Database Reset Complete"
+
 # --- Build & Deploy ---
 
 # Build all applications via Nix
