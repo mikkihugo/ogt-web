@@ -5,7 +5,7 @@
         "apps/*"
     ],
     "scripts": {
-        "lint": "bun run --filter '*' lint",
-        "check": "bun run --filter '*' check"
+        "lint": "npm run lint --workspaces",
+        "check": "npm run check --workspaces"
     }
 }
