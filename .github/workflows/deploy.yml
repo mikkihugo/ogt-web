@@ -26,7 +26,6 @@ jobs:
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
-            extra-sandbox-paths = /run/binfmt
 
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@main
