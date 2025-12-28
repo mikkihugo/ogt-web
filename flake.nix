@@ -233,6 +233,13 @@
             # Fix for sharp/node-gyp in Nix
             export PYTHON=${pkgs.python3}/bin/python3
             
+            # Mock environment for medusa build (it may validate config but shouldn't connect)
+            export DATABASE_URL="postgres://mock:mock@localhost:5432/mock"
+            export JWT_SECRET="build-time-secret"
+            export COOKIE_SECRET="build-time-secret"
+            export STRIPE_API_KEY="sk_test_mock"
+            export NODE_ENV="production"
+            
             npm run build --workspace=apps/medusa
           '';
 

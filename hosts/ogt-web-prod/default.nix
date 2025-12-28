@@ -64,12 +64,11 @@
     caddy.email = "support@ownorgasm.com";
     
     # Application services
-    # Medusa - TODO: fix Nix build (medusa build requires db connection)
-    # medusa = {
-    #   enable = true;
-    #   port = 9000;
-    #   databaseUrl = "postgres://medusa@localhost/medusa";
-    # };
+    medusa = {
+      enable = true;
+      port = 9000;
+      databaseUrl = "postgres://medusa@localhost/medusa";
+    };
     
     storefront = {
       enable = true;
