@@ -102,8 +102,7 @@
 
             # Node for Admin
             nodejs_22
-            # bun commented out - using npm for consistency with Nix builds
-            # bun                 # Fast All-in-One Runtime & Manager
+
             nodePackages.eslint # Global ESLint
             oxlint              # Fast JS/TS Linter
 

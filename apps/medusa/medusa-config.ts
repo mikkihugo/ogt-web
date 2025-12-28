@@ -25,42 +25,42 @@ export default defineConfig({
     disable: process.env.MEDUSA_DISABLE_ADMIN === "true",
   },
   modules: [
-    {
-      resolve: "@medusajs/payment",
-      options: {
-        providers: [
-          {
-            resolve: "@medusajs/payment-stripe",
-            id: "stripe",
-            options: {
-              apiKey: process.env.STRIPE_API_KEY || "sk_test_unused",
-              webhookSecret:
-                process.env.STRIPE_WEBHOOK_SECRET || "whsec_unused",
-              paymentMethodTypes: ["card", "apple_pay", "google_pay"],
-            },
-          },
-        ],
-      },
-    },
-    {
-      resolve: "@medusajs/file-s3",
-      options: {
-        providers: [
-          {
-            resolve: "@medusajs/file-s3",
-            id: "s3-minio",
-            options: {
-              file_url: process.env.MINIO_ENDPOINT || "http://localhost:9000",
-              access_key_id: process.env.MINIO_ACCESS_KEY,
-              secret_access_key: process.env.MINIO_SECRET_KEY,
-              region: "us-east-1",
-              bucket: "medusa-media",
-              endpoint: process.env.MINIO_ENDPOINT,
-              s3_force_path_style: true,
-            },
-          },
-        ],
-      },
-    },
+    // {
+    //   resolve: "@medusajs/payment",
+    //   options: {
+    //     providers: [
+    //       {
+    //         resolve: "@medusajs/payment-stripe",
+    //         id: "stripe",
+    //         options: {
+    //           apiKey: process.env.STRIPE_API_KEY || "sk_test_unused",
+    //           webhookSecret:
+    //             process.env.STRIPE_WEBHOOK_SECRET || "whsec_unused",
+    //           paymentMethodTypes: ["card", "apple_pay", "google_pay"],
+    //         },
+    //       },
+    //     ],
+    //   },
+    // },
+    // {
+    //   resolve: "@medusajs/file-s3",
+    //   options: {
+    //     providers: [
+    //       {
+    //         resolve: "@medusajs/file-s3",
+    //         id: "s3-minio",
+    //         options: {
+    //           file_url: process.env.MINIO_ENDPOINT || "http://localhost:9000",
+    //           access_key_id: process.env.MINIO_ACCESS_KEY,
+    //           secret_access_key: process.env.MINIO_SECRET_KEY,
+    //           region: "us-east-1",
+    //           bucket: "medusa-media",
+    //           endpoint: process.env.MINIO_ENDPOINT,
+    //           s3_force_path_style: true,
+    //         },
+    //       },
+    //     ],
+    //   },
+    // },
   ],
 });
