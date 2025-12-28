@@ -217,7 +217,7 @@
             cp -r .next/standalone/* $out/
             mkdir -p $out/.next/static
             cp -r .next/static $out/.next/static
-            cp -r public $out/public
+            cp -r public $out/public 2>/dev/null || true
           '';
         };
 
