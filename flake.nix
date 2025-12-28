@@ -144,24 +144,12 @@
               fi
             fi
 
-            # Auto-setup pre-commit hook for npmDepsHash
-            HOOK_PATH=".git/hooks/pre-commit"
-            if [ -d .git ] && [ ! -f "$HOOK_PATH" ]; then
-              echo "#!/bin/sh" > "$HOOK_PATH"
-              echo "if git diff --cached --name-only | grep -q 'package-lock.json'; then" >> "$HOOK_PATH"
-              echo "  echo '🔄 package-lock.json changed. Updating flake.nix hash...'" >> "$HOOK_PATH"
-              echo "  if ! command -v prefetch-npm-deps >/dev/null; then" >> "$HOOK_PATH"
-              echo "    echo '⚠️ prefetch-npm-deps not found. Are you in the nix dev shell?'" >> "$HOOK_PATH"
-              echo "    exit 1" >> "$HOOK_PATH"
-              echo "  fi" >> "$HOOK_PATH"
-              echo "  NEW_HASH=\$(prefetch-npm-deps package-lock.json)" >> "$HOOK_PATH"
-              echo "  # Update hash in flake.nix" >> "$HOOK_PATH"
-              echo "  sed -i \"s|npmDepsHash = \\\".*\\\";|npmDepsHash = \\\"\$NEW_HASH\\\";|g\" flake.nix" >> "$HOOK_PATH"
-              echo "  git add flake.nix" >> "$HOOK_PATH"
-              echo "  echo '✅ flake.nix updated with new SRI hash.'" >> "$HOOK_PATH"
-              echo "fi" >> "$HOOK_PATH"
-              chmod +x "$HOOK_PATH"
-              echo "🪝 Installed pre-commit hook for auto-hashing"
+            # Auto-setup pre-commit hook via core.hooksPath
+            # This points git to .githooks/ instead of .git/hooks/
+            if [ -d .githooks ]; then
+              git config core.hooksPath .githooks
+              chmod +x .githooks/pre-commit
+              echo "🪝 Git hooks configured to uses .githooks/"
             fi
           '';
         };

@@ -1,0 +1,26 @@
+#!/bin/sh
+# Auto-update flake.nix hash when package-lock.json changes
+
+# Only run if package-lock.json is staged
+if git diff --cached --name-only | grep -q 'package-lock.json'; then
+  echo "🔄 package-lock.json changed. Updating flake.nix hash..."
+  
+  # Ensure we have the tool
+  if ! command -v prefetch-npm-deps >/dev/null; then
+    echo "⚠️ prefetch-npm-deps not found. Are you in the nix dev shell?"
+    echo "   Run: nix develop"
+    exit 1
+  fi
+  
+  # Calculate new hash
+  NEW_HASH=$(prefetch-npm-deps package-lock.json)
+  
+  # Update hash in flake.nix
+  # Using simple sed since format is standard
+  sed -i "s|npmDepsHash = \".*\";|npmDepsHash = \"$NEW_HASH\";|g" flake.nix
+  
+  # Stage the updated flake.nix
+  git add flake.nix
+  
+  echo "✅ flake.nix updated with new SRI hash: $NEW_HASH"
+fi
