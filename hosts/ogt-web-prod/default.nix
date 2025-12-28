@@ -27,6 +27,15 @@
   zramSwap.enable = true;
   
   boot.tmp.cleanOnBoot = true;
+
+  # Nix Configuration
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.auto-optimise-store = true; # Deduplicate files
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 30d";
+  };
   
   users.users.root.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICMr2NP6jp8cv7LngufhEP6nAlpF3rv5lnr1ngW3fy3C mhugo@portal-automation"
