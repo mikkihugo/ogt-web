@@ -208,7 +208,7 @@
           name = "ogt-web-medusa-backend";
           src = ./.;
           
-          npmDepsHash = "sha256-0AwxfriB2atvVwy6/KMiuZ4uGUkTYrA5Epk5dyLW7RQ=";
+          npmDepsHash = pkgs.lib.fakeHash;
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;
@@ -254,7 +254,7 @@
           name = "ogt-web-medusa-admin";
           src = ./.;
           
-          npmDepsHash = "sha256-0AwxfriB2atvVwy6/KMiuZ4uGUkTYrA5Epk5dyLW7RQ=";
+          npmDepsHash = pkgs.lib.fakeHash;
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;
