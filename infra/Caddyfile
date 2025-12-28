@@ -1,8 +1,31 @@
+# Production domains (read from env)
 api.{$BASE_DOMAIN} {
   reverse_proxy medusa:9000
 }
 
-shop.{$BASE_DOMAIN} {
+# Local Development Maps
+http://orgasmtoy.localhost {
+  reverse_proxy storefront-next:3000
+}
+
+http://ownorgasm.localhost {
+  reverse_proxy storefront-next:3000
+}
+
+http://api.localhost {
+  reverse_proxy medusa:9000
+}
+
+http://admin.localhost {
+  reverse_proxy medusa:9000
+}
+
+http://minio.localhost {
+  reverse_proxy minio:9000
+}
+
+# Wildcard fallback for any other shop domain
+http://*.localhost {
   reverse_proxy storefront-next:3000
 }
 

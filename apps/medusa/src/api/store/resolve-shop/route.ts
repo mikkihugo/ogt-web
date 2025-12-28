@@ -8,10 +8,18 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
 
     const host = (req.query.host as string)?.toLowerCase();
-    if (!host) return res.status(400).json({ error: "missing host" });
+    const shopId = (req.query.shop_id as string);
+
+    if (!host && !shopId) return res.status(400).json({ error: "missing host or shop_id" });
 
     const ops = OpsDb.getInstance();
-    const shop = await ops.getShopByHost(host);
+    let shop;
+
+    if (shopId) {
+        shop = await ops.getShopById(shopId);
+    } else {
+        shop = await ops.getShopByHost(host);
+    }
     if (!shop) return res.status(404).json({ error: "shop not found" });
 
     return res.json({
@@ -20,5 +28,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         default_region: shop.default_region,
         currency_code: shop.currency_code,
         default_locale: shop.default_locale,
+        // Configs
+        theme_config: shop.theme_config,
+        navigation_config: shop.navigation_config,
+        legal_config: shop.legal_config,
+        seo_config: shop.seo_config,
+        payment_config: shop.payment_config,
+        marketing_config: shop.marketing_config,
+        support_config: shop.support_config
     });
 }

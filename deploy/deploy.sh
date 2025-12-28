@@ -8,7 +8,7 @@
 
 set -e
 
-SERVER="root@157.180.79.108"
+SERVER="root@77.42.66.89"
 DEPLOY_DIR="/opt/ogt"
 TAG="${1:-latest}"
 

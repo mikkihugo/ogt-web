@@ -2,12 +2,14 @@
 .env
 .env.local
 .env.*.local
+**/.env
+**/.env.local
 
 # Medusa specific
-/dist
-/uploads
-/node_modules
-.medusa
+**/dist
+**/uploads
+**/node_modules
+**/.medusa
 medusa-db.sql
 build
 .cache
@@ -60,3 +62,13 @@ coverage
 # TypeScript
 ./tsconfig.tsbuildinfo
 result
+infra/.env
+
+# Next.js
+**/.next
+
+# Terraform
+**/.terraform
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup

@@ -1,0 +1,9 @@
+# Common defaults
+build --disk_cache=~/.cache/bazel-disk-cache
+
+# Use Bzlmod
+common --enable_bzlmod
+
+# Output checking
+build --verbose_failures
+test --test_output=errors

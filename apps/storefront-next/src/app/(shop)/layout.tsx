@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { headers } from "next/headers";
 import { ChatwootLoader } from "../../lib/chatwoot";
 import { TrackingLoader } from "../../lib/tracking";
+import { DevShopSwitcher } from "../../components/dev/ShopSwitcher";
 // import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -17,10 +18,10 @@ export default async function RootLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const h = headers();
+    const h = await headers();
     const shopId = h.get("x-shop-id") || "";
 
-    let shop = { default_locale: "en", marketing_config: {}, support_config: {} };
+    let shop: any = { default_locale: "en", marketing_config: {}, support_config: {}, theme_config: {} };
 
     try {
         const res = await fetch(`${process.env.SHOP_RESOLVER_URL}/store/shop-config?shop_id=${shopId}`, {
@@ -35,10 +36,20 @@ export default async function RootLayout({
     }
 
     return (
-        <html lang={shop.default_locale}>
+        <html lang={shop.default_locale} data-theme={shop.theme_config?.id || "default"}>
+            <head>
+                <style dangerouslySetInnerHTML={{
+                    __html: `:root {
+                        --brand-primary: ${shop.theme_config?.colors?.primary || "#000"};
+                        --brand-secondary: ${shop.theme_config?.colors?.secondary || "#fff"};
+                        --brand-font: ${shop.theme_config?.font || "Inter"};
+                    }`
+                }} />
+            </head>
             <body className={inter.className}>
                 <TrackingLoader config={shop.marketing_config} />
                 <ChatwootLoader config={shop.support_config} />
+                <DevShopSwitcher />
                 {children}
             </body>
         </html>

@@ -5,14 +5,17 @@ export async function middleware(req: NextRequest) {
     const host = req.headers.get("host")?.toLowerCase() || "";
     const url = req.nextUrl;
 
+    // DEV MODE: Allow overriding via cookie
+    const devShopId = process.env.NODE_ENV === "development" ? req.cookies.get("dev_shop_id")?.value : null;
+
     // Call your Medusa admin API route that reads ops_db.shop_domain
-    const res = await fetch(`${process.env.SHOP_RESOLVER_URL}/store/resolve-shop?host=${encodeURIComponent(host)}`, {
+    const query = devShopId ? `shop_id=${devShopId}` : `host=${encodeURIComponent(host)}`;
+    const res = await fetch(`${process.env.SHOP_RESOLVER_URL}/store/resolve-shop?${query}`, {
         headers: { "x-internal-token": process.env.INTERNAL_API_TOKEN || "" },
         cache: "no-store",
     });
 
     if (!res.ok) {
-        // default: show maintenance or redirect
         return NextResponse.rewrite(new URL("/_system/no-shop", url));
     }
 

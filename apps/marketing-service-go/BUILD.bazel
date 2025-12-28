@@ -1,0 +1,21 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "marketing_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/mikkihugo/ogt-web/apps/marketing-service-go",
+    stop_ignore_on_input_file = False,
+    visibility = ["//visibility:private"],
+    deps = [
+        "@com_github_go_chi_chi_v5//:chi",
+        "@com_github_jackc_pgx_v5//pgxpool",
+        "@com_github_stripe_stripe_go_v76//:stripe-go",
+        "@com_github_stripe_stripe_go_v76//tax/calculation",
+    ],
+)
+
+go_binary(
+    name = "marketing-service",
+    embed = [":marketing_lib"],
+    visibility = ["//visibility:public"],
+)
