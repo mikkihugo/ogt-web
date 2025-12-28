@@ -53,9 +53,14 @@ in
       # Use the pre-built medusa package
       script = ''
         # Link config to state dir and run from there
-        ln -sf ${medusaPackage}/medusa-config.js /var/lib/medusa/medusa-config.js
-        ln -sf ${medusaPackage}/package.json /var/lib/medusa/package.json
-        ln -sf ${medusaPackage}/node_modules /var/lib/medusa/node_modules
+        # Link config to state dir with force/no-dereference
+        rm -rf /var/lib/medusa/medusa-config.js
+        rm -rf /var/lib/medusa/package.json
+        rm -rf /var/lib/medusa/node_modules
+        
+        ln -sfn ${medusaPackage}/medusa-config.js /var/lib/medusa/medusa-config.js
+        ln -sfn ${medusaPackage}/package.json /var/lib/medusa/package.json
+        ln -sfn ${medusaPackage}/node_modules /var/lib/medusa/node_modules
         
         cd /var/lib/medusa
         exec ${pkgs.nodejs_22}/bin/node node_modules/@medusajs/medusa/dist/index.js start
