@@ -108,5 +108,6 @@
     htop
     curl
     jq
+    sops
   ];
 }
