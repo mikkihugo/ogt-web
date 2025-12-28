@@ -164,7 +164,7 @@
           src = ./.;
           
           # NPM configuration - hash will be recalculated
-          npmDepsHash = "sha256-aOdVu/JIMR9AcAqHFogjTO3cVI/NhR4hyYBT6mzPUGI=";
+          npmDepsHash = "sha256-N0M78U+KpqcLGTDAV8lx2YRfidnAKJUx0FgcgfI4Rfo=";
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;  # We handle build in buildPhase
@@ -219,7 +219,7 @@
           name = "ogt-web-medusa-backend";
           src = ./.;
           
-          npmDepsHash = "sha256-aOdVu/JIMR9AcAqHFogjTO3cVI/NhR4hyYBT6mzPUGI=";
+          npmDepsHash = "sha256-N0M78U+KpqcLGTDAV8lx2YRfidnAKJUx0FgcgfI4Rfo=";
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;
@@ -266,7 +266,7 @@
           name = "ogt-web-medusa-admin";
           src = ./.;
           
-          npmDepsHash = "sha256-aOdVu/JIMR9AcAqHFogjTO3cVI/NhR4hyYBT6mzPUGI=";
+          npmDepsHash = "sha256-N0M78U+KpqcLGTDAV8lx2YRfidnAKJUx0FgcgfI4Rfo=";
           makeCacheWritable = true;
           npmFlags = [ "--legacy-peer-deps" ];
           dontNpmBuild = true;
