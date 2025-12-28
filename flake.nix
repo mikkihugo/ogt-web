@@ -143,7 +143,7 @@
         # =====================================================================
         packages = rec {
           dockerImage = nix2containerPkgs.nix2container.buildImage {
-            name = "ogt-web-backend";
+            name = "ghcr.io/mikkihugo/ogt/medusa";
             tag = "latest";
             config = {
               Cmd = [ "yarn" "start" ];
@@ -230,7 +230,7 @@
 
   # 2. Storefront Builder
         storefrontImage = nix2containerPkgs.nix2container.buildImage {
-          name = "ogt-web-storefront";
+          name = "ghcr.io/mikkihugo/ogt/storefront";
           tag = "latest";
           copyToRoot = [ 
             pkgs.nodejs_22 
