@@ -46,6 +46,7 @@ in
         ADMIN_CORS = "https://admin.ownorgasm.com";
         AUTH_CORS = "https://ownorgasm.com,https://admin.ownorgasm.com";
         MEDUSA_BACKEND_URL = "https://admin.ownorgasm.com";
+        MEDUSA_DISABLE_ADMIN = "true";
         HOME = "/var/lib/medusa";
         npm_config_cache = "/var/lib/medusa/.npm";
       };
