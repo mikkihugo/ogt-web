@@ -1,9 +1,8 @@
-import { MedusaService } from "@medusajs/framework/utils"
-import Post from "./models/post"
+import { MedusaService } from "@medusajs/framework/utils";
+import Post from "./models/post";
 
 class BlogModuleService extends MedusaService({
-    Post,
-}) {
-}
+  Post,
+}) {}
 
-export default BlogModuleService
+export default BlogModuleService;

@@ -3,24 +3,24 @@ import { OpsDb } from "../modules/ops/service";
 import { Logger } from "@medusajs/types";
 
 export default async function (container: MedusaContainer) {
-    const logger = container.resolve("logger") as Logger;
-    logger.info("Starting Adaptive Logistics Schema Upgrade (Phase 8)...");
+  const logger = container.resolve("logger") as Logger;
+  logger.info("Starting Adaptive Logistics Schema Upgrade (Phase 8)...");
 
-    const ops = OpsDb.getInstance();
-    const pool = await ops.getQueryRunner();
+  const ops = OpsDb.getInstance();
+  const pool = await ops.getQueryRunner();
 
-    try {
-        // 1. Supplier Reliability Score
-        logger.info("Adding reliability_score to dropship.supplier...");
-        await pool.query(`
+  try {
+    // 1. Supplier Reliability Score
+    logger.info("Adding reliability_score to dropship.supplier...");
+    await pool.query(`
             ALTER TABLE dropship.supplier 
             ADD COLUMN IF NOT EXISTS reliability_score INT DEFAULT 100;
         `);
 
-        // 2. Event History (Time Travel / Audit)
-        // Stores inputs and outcomes of automated decisions.
-        logger.info("Creating dropship.event_history table...");
-        await pool.query(`
+    // 2. Event History (Time Travel / Audit)
+    // Stores inputs and outcomes of automated decisions.
+    logger.info("Creating dropship.event_history table...");
+    await pool.query(`
             CREATE TABLE IF NOT EXISTS dropship.event_history (
                 id SERIAL PRIMARY KEY,
                 event_type VARCHAR(50) NOT NULL, -- 'routing_decision', 'price_change', 'supplier_score_update'
@@ -31,14 +31,13 @@ export default async function (container: MedusaContainer) {
             );
         `);
 
-        // Index for fast lookups by entity (e.g., "Show me all routing decisions for Order X")
-        await pool.query(`
+    // Index for fast lookups by entity (e.g., "Show me all routing decisions for Order X")
+    await pool.query(`
             CREATE INDEX IF NOT EXISTS idx_event_history_entity ON dropship.event_history(entity_id);
         `);
 
-        logger.info("✅ Adaptive Logistics Schema Applied Successfully.");
-
-    } catch (err) {
-        logger.error("Failed to apply Adaptive Schema", err);
-    }
+    logger.info("✅ Adaptive Logistics Schema Applied Successfully.");
+  } catch (err) {
+    logger.error("Failed to apply Adaptive Schema", err as Error);
+  }
 }

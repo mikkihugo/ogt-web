@@ -2,7 +2,7 @@ name: Deploy OGT Web
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 concurrency:
@@ -17,7 +17,7 @@ env:
 
 jobs:
   build-medusa:
-    runs-on: blacksmith-4vcpu-ubuntu-2204-arm64
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     permissions:
       contents: read
       packages: write
@@ -25,8 +25,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Native ARM runner doesn't need QEMU for linux/arm64 builds
-      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -49,13 +51,16 @@ jobs:
           cache-to: type=gha,mode=max
 
   build-storefront:
-    runs-on: blacksmith-4vcpu-ubuntu-2204-arm64
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     permissions:
       contents: read
       packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -82,10 +87,16 @@ jobs:
 
   deploy:
     needs: [build-medusa, build-storefront]
-    runs-on: blacksmith-4vcpu-ubuntu-2204-arm64
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Deploy to Hetzner
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
         env:
           MEDUSA_ADMIN_PASSWORD: ${{ secrets.MEDUSA_ADMIN_PASSWORD }}
         with:
@@ -97,7 +108,7 @@ jobs:
             export MEDUSA_ADMIN_PASSWORD=$MEDUSA_ADMIN_PASSWORD
             # Only ensure directory exists
             mkdir -p /opt/ogt
-            
+
             cat > /opt/ogt/docker-compose.yml << 'EOF'
             version: "3.8"
             services:
@@ -213,10 +224,10 @@ jobs:
             cd /opt/ogt
             docker compose pull
             docker compose up -d --remove-orphans
-            
+
             # Wait for Medusa to be ready
             sleep 15
-            
+
             # Run migrations and seed
             docker compose exec -T medusa yarn medusa db:migrate
             # Run seed if environment var is set or on update

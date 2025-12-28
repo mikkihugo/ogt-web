@@ -4,13 +4,13 @@ import fs from "fs";
 import path from "path";
 
 export default async function (container: MedusaContainer) {
-    const ops = OpsDb.getInstance();
-    const pool = await ops.getQueryRunner();
+  const ops = OpsDb.getInstance();
+  const pool = await ops.getQueryRunner();
 
-    // Read raw SQL file
-    const sqlPath = path.resolve(__dirname, "phase8-product.sql");
-    const sql = fs.readFileSync(sqlPath, "utf8");
+  // Read raw SQL file
+  const sqlPath = path.resolve(__dirname, "phase8-product.sql");
+  const sql = fs.readFileSync(sqlPath, "utf8");
 
-    await pool.query(sql);
-    console.log("✅ Applied Product Metrics Schema");
+  await pool.query(sql);
+  console.log("✅ Applied Product Metrics Schema");
 }

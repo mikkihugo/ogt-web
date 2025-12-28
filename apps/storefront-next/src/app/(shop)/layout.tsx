@@ -9,49 +9,62 @@ import { DevShopSwitcher } from "../../components/dev/ShopSwitcher";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Unified Shop",
-    description: "Powered by OGT-Web",
+  title: "Unified Shop",
+  description: "Powered by OGT-Web",
 };
 
 export default async function RootLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    const h = await headers();
-    const shopId = h.get("x-shop-id") || "";
+  const h = await headers();
+  const shopId = h.get("x-shop-id") || "";
 
-    let shop: any = { default_locale: "en", marketing_config: {}, support_config: {}, theme_config: {} };
+  let shop: any = {
+    default_locale: "en",
+    marketing_config: {},
+    support_config: {},
+    theme_config: {},
+  };
 
-    try {
-        const res = await fetch(`${process.env.SHOP_RESOLVER_URL}/store/shop-config?shop_id=${shopId}`, {
-            headers: { "x-internal-token": process.env.INTERNAL_API_TOKEN || "" },
-            cache: "no-store",
-        });
-        if (res.ok) {
-            shop = await res.json();
-        }
-    } catch (e) {
-        console.error("Failed to load shop config", e);
+  try {
+    const res = await fetch(
+      `${process.env.SHOP_RESOLVER_URL}/store/shop-config?shop_id=${shopId}`,
+      {
+        headers: { "x-internal-token": process.env.INTERNAL_API_TOKEN || "" },
+        cache: "no-store",
+      },
+    );
+    if (res.ok) {
+      shop = await res.json();
     }
+  } catch (e) {
+    console.error("Failed to load shop config", e);
+  }
 
-    return (
-        <html lang={shop.default_locale} data-theme={shop.theme_config?.id || "default"}>
-            <head>
-                <style dangerouslySetInnerHTML={{
-                    __html: `:root {
+  return (
+    <html
+      lang={shop.default_locale}
+      data-theme={shop.theme_config?.id || "default"}
+    >
+      <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `:root {
                         --brand-primary: ${shop.theme_config?.colors?.primary || "#000"};
                         --brand-secondary: ${shop.theme_config?.colors?.secondary || "#fff"};
                         --brand-font: ${shop.theme_config?.font || "Inter"};
-                    }`
-                }} />
-            </head>
-            <body className={inter.className}>
-                <TrackingLoader config={shop.marketing_config} />
-                <ChatwootLoader config={shop.support_config} />
-                <DevShopSwitcher />
-                {children}
-            </body>
-        </html>
-    );
+                    }`,
+          }}
+        />
+      </head>
+      <body className={inter.className}>
+        <TrackingLoader config={shop.marketing_config} />
+        <ChatwootLoader config={shop.support_config} />
+        <DevShopSwitcher />
+        {children}
+      </body>
+    </html>
+  );
 }

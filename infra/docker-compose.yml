@@ -83,7 +83,7 @@ services:
 
   medusa:
     image: localhost/medusa:latest
-    build: 
+    build:
       context: ../../apps/medusa
       dockerfile: Dockerfile
     environment:
