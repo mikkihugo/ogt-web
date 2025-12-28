@@ -1,7 +1,7 @@
 import { MedusaContainer } from "@medusajs/framework";
 import { SupplierService } from "../modules/dropship/supplier.service";
 import { InventoryService } from "../modules/dropship/inventory.service";
-import syncSupplierInventory from "./sync-supplier";
+import syncSupplierInventory from "../scripts/sync-supplier";
 
 export default async function (container: MedusaContainer) {
   const logger = container.resolve("logger");

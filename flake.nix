@@ -242,8 +242,8 @@
           buildPhase = ''
             export PYTHON=${pkgs.python3}/bin/python3
             
-            # Disable admin UI during build (reduces complexity, admin deployed separately)
-            export MEDUSA_DISABLE_ADMIN=true
+            # Enable admin build to populate artifacts (prevents medusa start crash)
+            # export MEDUSA_DISABLE_ADMIN=true
             export DATABASE_URL="postgres://mock:mock@localhost:5432/mock"
             export JWT_SECRET="build-time-secret"
             export COOKIE_SECRET="build-time-secret"
