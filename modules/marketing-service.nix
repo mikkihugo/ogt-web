@@ -28,6 +28,7 @@ in
       
       environment = {
         PORT = toString cfg.port;
+        DATABASE_URL = "postgres://postgres:$(cat /run/secrets/postgres_password)@localhost:5432/marketing";
       };
       
       serviceConfig = {

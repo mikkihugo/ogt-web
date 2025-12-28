@@ -22,8 +22,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     flake-utils.url = "github:numtide/flake-utils";
-    nix2container.url = "github:nlewo/nix2container";
-    nix2container.inputs.nixpkgs.follows = "nixpkgs";
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -37,7 +35,7 @@
     ];
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix2container, sops-nix }:
+  outputs = { self, nixpkgs, flake-utils, sops-nix }:
     let
       # NixOS configuration for production server
       nixosConfigurations.ogt-web-prod = nixpkgs.lib.nixosSystem {
@@ -55,7 +53,6 @@
           inherit system;
           config.allowUnfree = true;
         };
-        nix2containerPkgs = nix2container.packages.${system};
       in
       {
         # =====================================================================
@@ -69,7 +66,6 @@
             nodePackages.typescript-language-server
             nodePackages.prettier
 
-            # Database
             # Database
             (postgresql_18.withPackages (p: [
               p.postgis
@@ -154,40 +150,7 @@
         # PACKAGES
         # =====================================================================
         packages = rec {
-          dockerImage = nix2containerPkgs.nix2container.buildImage {
-            name = "ghcr.io/mikkihugo/ogt/medusa";
-            tag = "latest";
-            config = {
-              Cmd = [ "yarn" "start" ];
-              Env = [
-                "NODE_ENV=production"
-                "PORT=9000"
-              ];
-              ExposedPorts = {
-                "9000/tcp" = {};
-              };
-              WorkingDir = "/app";
-            };
-            maxLayers = 120;
-            layers = [
-              (nix2containerPkgs.nix2container.buildLayer {
-                deps = with pkgs; [ nodejs_20 yarn bashInteractive ];
-              })
-              (nix2containerPkgs.nix2container.buildLayer {
-                 # Copy the entire Medusa app to /app
-                 copyToRoot = [
-                   (pkgs.runCommand "medusa-source" {} ''
-                     mkdir -p $out/app
-                     cp -r ${./apps/medusa}/* $out/app/
-                   '')
-                 ];
-              })
-            ];
-            # Basic implementation for now - just the runtime environment
-            # Real application code adding requires more structure.
-          };
-
-        # 1. Storefront Builder (Standard NPM)
+        # Storefront Builder (Standard NPM)
         storefront-next = pkgs.buildNpmPackage {
           name = "ogt-web-storefront";
           src = ./.;

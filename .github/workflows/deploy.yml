@@ -13,26 +13,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU for aarch64 emulation
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
-        with:
-          extra-conf: |
-            extra-platforms = aarch64-linux
-
-      - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@main
-
-      - name: Build NixOS configuration
-        run: nix build .#nixosConfigurations.ogt-web-prod.config.system.build.toplevel --print-build-logs
-
       - name: Setup SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -41,28 +21,18 @@ jobs:
       - name: Add server to known hosts
         run: ssh-keyscan -H 77.42.66.89 >> ~/.ssh/known_hosts
 
-      - name: Copy closure to server
-        run: nix copy --to ssh://root@77.42.66.89 ./result
-
-      - name: Get store path
-        id: store-path
-        run: echo "path=$(readlink -f ./result)" >> "$GITHUB_OUTPUT"
-
-      - name: Activate configuration
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 77.42.66.89
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            ${{ steps.store-path.outputs.path }}/bin/switch-to-configuration switch
+      - name: Deploy via remote build
+        run: |
+          ssh root@77.42.66.89 "
+            cd /etc/nixos &&
+            git fetch origin main &&
+            git reset --hard origin/main &&
+            nixos-rebuild switch --flake .#ogt-web-prod 2>&1
+          "
 
       - name: Verify deployment
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 77.42.66.89
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
+        run: |
+          ssh root@77.42.66.89 "
             nixos-version
             systemctl status postgresql redis-default caddy --no-pager || true
+          "

@@ -40,8 +40,8 @@ in
       
       serviceConfig = {
         Type = "simple";
-        ExecStart = "${pkgs.nodejs_22}/bin/node ${storefrontPackage}/server.js";
-        WorkingDirectory = "${storefrontPackage}";
+        ExecStart = "${pkgs.nodejs_22}/bin/node ${storefrontPackage}/apps/storefront-next/server.js";
+        WorkingDirectory = "${storefrontPackage}/apps/storefront-next";
         Restart = "on-failure";
         RestartSec = 5;
         

@@ -127,6 +127,12 @@
           reverse_proxy localhost:9100
         '';
       };
+      
+      "cms.ownorgasm.com" = {
+        extraConfig = ''
+          reverse_proxy localhost:1337
+        '';
+      };
     };
   };
 
