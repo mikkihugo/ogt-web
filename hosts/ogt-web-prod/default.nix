@@ -64,11 +64,12 @@
     caddy.email = "support@ownorgasm.com";
     
     # Application services
-    medusa = {
-      enable = true;
-      port = 9000;
-      databaseUrl = "postgres://medusa@localhost/medusa";
-    };
+    # TODO: Medusa build fails - @medusajs/cli has internal issue during build
+    # medusa = {
+    #   enable = true;
+    #   port = 9000;
+    #   databaseUrl = "postgres://medusa@localhost/medusa";
+    # };
     
     storefront = {
       enable = true;
