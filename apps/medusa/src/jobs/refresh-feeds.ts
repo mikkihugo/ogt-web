@@ -4,7 +4,7 @@ import { FeedService } from "../modules/marketing/feed.service";
 import * as fs from "fs";
 import * as path from "path";
 
-export const refreshFeedsJob = async (container: MedusaContainer) => {
+export default async function refreshFeedsJob(container: MedusaContainer) {
   const logger = container.resolve("logger") as Logger;
   const feedService = FeedService.getInstance();
   feedService.setLogger(logger);
@@ -32,4 +32,9 @@ export const refreshFeedsJob = async (container: MedusaContainer) => {
   } catch (err) {
     logger.error("Product Scoring Failed", err as Error);
   }
+}
+
+export const config = {
+  name: "refresh-feeds",
+  schedule: "0 0 * * *",
 };

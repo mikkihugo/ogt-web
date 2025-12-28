@@ -40,7 +40,7 @@
     "ajv-draft-04": "1.0.0",
     "ajv-formats": "3.0.1",
     "kysely": "^0.28.9",
-    "pg": "^8.11.3"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@medusajs/test-utils": "2.12.3",

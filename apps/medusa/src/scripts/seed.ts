@@ -3,7 +3,7 @@ import { ExecArgs } from "@medusajs/framework/types";
 import { MedusaContainer } from "@medusajs/framework";
 
 export default async function seedDemo(
-  container: MedusaContainer,
+  { container }: { container: MedusaContainer },
   args: ExecArgs,
 ) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
@@ -44,8 +44,8 @@ export default async function seedDemo(
   }
 
   // 2. Regions (Global USD)
-  const [regions] = await regionModule.listRegions();
-  let region = (regions as any)[0];
+  const regions = await regionModule.listRegions();
+  let region = regions[0];
   if (!region) {
     region = await regionModule.createRegions({
       name: "Global",
@@ -136,17 +136,17 @@ export default async function seedDemo(
       // Link Variant to Inventory Item
       // (In Medusa v2 this is via Remote Link or specific service, assuming standard link name)
       await link.create({
-        productService: {
+        product: {
           variant_id: variant.id,
         },
-        inventoryService: {
+        inventory: {
           inventory_item_id: inventoryItem.id,
         },
       });
 
       // Add Stock to default location (we need a location first? default usually exists or we create one)
-      const [locations] = await stockLocationModule.listStockLocations({});
-      let locationId = (locations as any)[0]?.id;
+      const locations = await stockLocationModule.listStockLocations({});
+      let locationId = locations[0]?.id;
 
       if (!locationId) {
         const loc = await stockLocationModule.createStockLocations({
@@ -156,18 +156,18 @@ export default async function seedDemo(
         // Link Sales Channel to Stock Location (required for visibility)
         // Sales Channel -> Stock Location link
         await link.create({
-          salesChannelService: {
+          sales_channel: {
             sales_channel_id: scOrgasmToy.id, // Link to both?
           },
-          stockLocationService: {
+          stock_location: {
             stock_location_id: locationId,
           },
         });
         await link.create({
-          salesChannelService: {
+          sales_channel: {
             sales_channel_id: scOwnOrgasm.id,
           },
-          stockLocationService: {
+          stock_location: {
             stock_location_id: locationId,
           },
         });
@@ -220,13 +220,29 @@ export default async function seedDemo(
       );
     }
 
-    await (productModule as any).createCollections({
-      title: c.title,
-      handle: c.handle,
-      metadata: {
-        image: imageUrl, // Storefront can read this
-      },
-    });
+    try {
+      if (typeof (productModule as any).createProductCollections === "function") {
+        await (productModule as any).createProductCollections({
+          title: c.title,
+          handle: c.handle,
+          metadata: {
+            image: imageUrl,
+          },
+        });
+      } else if (typeof (productModule as any).createCollections === "function") {
+        await (productModule as any).createCollections({
+          title: c.title,
+          handle: c.handle,
+          metadata: {
+            image: imageUrl,
+          },
+        });
+      } else {
+        logger.warn(`Skipping collection creation: Method not found on ProductModule.`);
+      }
+    } catch (err) {
+      logger.warn(`Failed to create collection ${c.title}: ${(err as Error).message}`);
+    }
   }
 
   logger.info("✅ Seeding complete.");

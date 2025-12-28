@@ -3,7 +3,7 @@ import { Logger } from "@medusajs/types";
 import { OpsDb } from "../modules/ops/service";
 
 // Phase 8.2: Product Scoring & Kill Switches
-export const scoreProductsJob = async (container: MedusaContainer) => {
+export default async function scoreProductsJob(container: MedusaContainer) {
   const logger = container.resolve("logger") as Logger;
   const ops = OpsDb.getInstance();
   const pool = await ops.getQueryRunner();
@@ -52,4 +52,9 @@ export const scoreProductsJob = async (container: MedusaContainer) => {
   } catch (err) {
     logger.error("Product Scoring Failed", err as Error);
   }
+}
+
+export const config = {
+  name: "score-products",
+  schedule: "0 0 * * *",
 };

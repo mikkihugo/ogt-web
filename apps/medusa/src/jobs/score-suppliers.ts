@@ -4,7 +4,7 @@ import { OpsDb } from "../modules/ops/service";
 
 // Phase 8: Supplier Scoring Job
 // Runs daily to update 'reliability_score' based on recent performance.
-export const scoreSuppliersJob = async (container: MedusaContainer) => {
+export default async function scoreSuppliersJob(container: MedusaContainer) {
   const logger = container.resolve("logger") as Logger;
   const ops = OpsDb.getInstance();
   const pool = await ops.getQueryRunner();
@@ -81,4 +81,9 @@ export const scoreSuppliersJob = async (container: MedusaContainer) => {
   } catch (err) {
     logger.error("Failed to score suppliers", err as Error);
   }
+}
+
+export const config = {
+  name: "score-suppliers",
+  schedule: "0 0 * * *",
 };
