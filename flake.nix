@@ -218,9 +218,21 @@
           nativeBuildInputs = [ 
             pkgs.pkg-config 
             pkgs.python3
+            pkgs.util-linux
+            pkgs.nodePackages.node-gyp
+          ];
+          
+          buildInputs = [
+            pkgs.vips
+            pkgs.glib
+            pkgs.gcc
+            pkgs.gnumake
           ];
 
           buildPhase = ''
+            # Fix for sharp/node-gyp in Nix
+            export PYTHON=${pkgs.python3}/bin/python3
+            
             npm run build --workspace=apps/medusa
           '';
 
