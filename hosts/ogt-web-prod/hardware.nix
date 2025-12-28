@@ -5,9 +5,8 @@
 
   boot = {
     loader.grub = {
-      efiSupport = true;
-      efiInstallAsRemovable = true;
-      device = "nodev";
+      enable = true;
+      device = "/dev/sda";  # BIOS/MBR boot, not EFI
     };
     initrd = {
       availableKernelModules = [ "ata_piix" "uhci_hcd" "xen_blkfront" ];
