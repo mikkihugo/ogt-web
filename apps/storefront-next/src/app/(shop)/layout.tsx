@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google";
 import { headers } from "next/headers";
 import { ChatwootLoader } from "../../lib/chatwoot";
 import { TrackingLoader } from "../../lib/tracking";
 import { DevShopSwitcher } from "../../components/dev/ShopSwitcher";
 // import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Unified Shop",
@@ -59,7 +59,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className="font-sans">
         <TrackingLoader config={shop.marketing_config} />
         <ChatwootLoader config={shop.support_config} />
         <DevShopSwitcher />
