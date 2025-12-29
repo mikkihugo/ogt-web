@@ -1,7 +1,4 @@
-# Production domains (read from env)
-api.{$BASE_DOMAIN} {
-  reverse_proxy medusa:9000
-}
+
 
 # Local Development Maps
 http://orgasmtoy.localhost {
@@ -12,9 +9,7 @@ http://ownorgasm.localhost {
   reverse_proxy storefront-next:3000
 }
 
-http://api.localhost {
-  reverse_proxy medusa:9000
-}
+
 
 http://admin.localhost {
   reverse_proxy medusa:9000

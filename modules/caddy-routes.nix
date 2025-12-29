@@ -39,12 +39,7 @@ with lib;
           '';
         };
         
-        # Marketing Service API
-        "api.ownorgasm.com" = {
-          extraConfig = ''
-            reverse_proxy localhost:8080
-          '';
-        };
+
         
 
       };
