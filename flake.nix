@@ -161,7 +161,14 @@
         # Storefront Builder (Standard NPM)
         storefront-next = pkgs.buildNpmPackage {
           name = "ogt-web-storefront";
-          src = ./.;
+          src = pkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = pkgs.lib.fileset.unions [
+              ./package.json
+              ./package-lock.json
+              ./apps/storefront-next
+            ];
+          };
           
           # NPM configuration - hash will be recalculated
           npmDepsHash = "sha256-N0M78U+KpqcLGTDAV8lx2YRfidnAKJUx0FgcgfI4Rfo=";
@@ -217,7 +224,14 @@
         # Medusa Backend (API only, no admin UI)
         medusa-backend = pkgs.buildNpmPackage {
           name = "ogt-web-medusa-backend";
-          src = ./.;
+          src = pkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = pkgs.lib.fileset.unions [
+              ./package.json
+              ./package-lock.json
+              ./apps/medusa
+            ];
+          };
           
           npmDepsHash = "sha256-N0M78U+KpqcLGTDAV8lx2YRfidnAKJUx0FgcgfI4Rfo=";
           makeCacheWritable = true;
@@ -264,7 +278,14 @@
         # Medusa Admin UI (built separately for Caddy static serving)
         medusa-admin = pkgs.buildNpmPackage {
           name = "ogt-web-medusa-admin";
-          src = ./.;
+          src = pkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = pkgs.lib.fileset.unions [
+              ./package.json
+              ./package-lock.json
+              ./apps/medusa
+            ];
+          };
           
           npmDepsHash = "sha256-N0M78U+KpqcLGTDAV8lx2YRfidnAKJUx0FgcgfI4Rfo=";
           makeCacheWritable = true;
