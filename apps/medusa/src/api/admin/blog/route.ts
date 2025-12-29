@@ -3,8 +3,8 @@ import type {
   MedusaResponse,
 } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
-import { BLOG_MODULE } from "../../../modules/blog/index.js";
-import BlogModuleService from "../../../modules/blog/service.js";
+import { BLOG_MODULE } from "../../../modules/blog";
+import BlogModuleService from "../../../modules/blog/service";
 
 export const GET = async (
   req: AuthenticatedMedusaRequest,
