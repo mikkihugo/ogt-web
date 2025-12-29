@@ -86,7 +86,7 @@
     storefront = {
       enable = true;
       port = 3000;
-      backendUrl = "https://admin.orgasmtoy.com";
+      backendUrl = "https://admin.ownorgasm.com";
     };
     
     marketing-service = {

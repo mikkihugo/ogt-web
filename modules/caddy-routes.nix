@@ -50,8 +50,8 @@ with lib;
             '';
           };
           
-          # Medusa Admin/API
-          "admin.orgasmtoy.com" = {
+          # Medusa Admin/API (PRIMARY)
+          "admin.ownorgasm.com" = {
             extraConfig = ''
               root * ${medusaAdmin}
 
@@ -70,15 +70,13 @@ with lib;
             '';
           };
 
-          "admin.ownorgasm.com" = {
+          # Admin Redirect
+          "admin.orgasmtoy.com" = {
             extraConfig = ''
-              redir https://admin.orgasmtoy.com{uri} permanent
+              redir https://admin.ownorgasm.com{uri} permanent
             '';
           };
       };
       };
     };
-  };
-
-
-}
+  }
