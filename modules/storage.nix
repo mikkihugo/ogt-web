@@ -9,13 +9,13 @@ with lib;
     
     listenPort = mkOption {
       type = types.port;
-      default = 9100;
+      default = 9300;
       description = "MinIO API port";
     };
     
     consolePort = mkOption {
       type = types.port;
-      default = 9101;
+      default = 9301;
       description = "MinIO console port";
     };
   };
