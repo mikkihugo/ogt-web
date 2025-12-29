@@ -2,6 +2,8 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
+console.log("Loading Medusa Config... Admin Path:", "/");
+
 export default defineConfig({
   projectConfig: {
     databaseUrl:

@@ -310,7 +310,8 @@
           buildPhase = ''
             export PYTHON=${pkgs.python3}/bin/python3
             export MEDUSA_BACKEND_URL="https://admin.ownorgasm.com"
-            
+            export MEDUSA_ADMIN_PATH="/"
+                        
             # Build admin only (from root to preserve context)
             npm run build --workspace=apps/medusa -- --admin-only
           '';

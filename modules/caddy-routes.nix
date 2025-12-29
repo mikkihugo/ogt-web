@@ -37,16 +37,16 @@ with lib;
             '';
           };
 
-          # Blog Redirect (ownorgasm.com -> orgasmtoy.com/blog)
+          # Marketing Service / Standalone Blog
           "ownorgasm.com" = {
             extraConfig = ''
-              redir https://orgasmtoy.com/blog permanent
+              reverse_proxy localhost:8080
             '';
           };
           
           "www.ownorgasm.com" = {
             extraConfig = ''
-              redir https://orgasmtoy.com/blog permanent
+              redir https://ownorgasm.com{uri} permanent
             '';
           };
           
