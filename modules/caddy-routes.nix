@@ -55,17 +55,18 @@ with lib;
             extraConfig = ''
               root * ${medusaAdmin}
 
-              handle_path /app/* {
+              # API Routes - Proxy to Backend
+              @api {
+                path /admin/* /store/* /auth/* /health /uploads/*
+              }
+              handle @api {
+                reverse_proxy localhost:9000
+              }
+
+              # Admin UI - SPA
+              handle {
                 file_server
                 try_files {path} {path}/ /index.html
-              }
-
-              handle /app {
-                redir /app/ permanent
-              }
-
-              handle {
-                reverse_proxy localhost:9000
               }
             '';
           };

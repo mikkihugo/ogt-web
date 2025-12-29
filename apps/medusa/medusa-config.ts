@@ -19,7 +19,7 @@ export default defineConfig({
     },
   },
   admin: {
-    path: "/app",
+    path: "/",
     backendUrl: process.env.MEDUSA_BACKEND_URL || "https://admin.ownorgasm.com",
     // Can disable admin for backend-only build
     disable: process.env.MEDUSA_DISABLE_ADMIN === "true",
