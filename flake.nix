@@ -194,7 +194,7 @@
           buildPhase = ''
             # Fix for sharp/node-gyp in Nix
             export PYTHON=${pkgs.python3}/bin/python3
-            export NEXT_PUBLIC_MEDUSA_BACKEND_URL="https://admin.ownorgasm.com"
+            export NEXT_PUBLIC_MEDUSA_BACKEND_URL="https://admin.orgasmtoy.com"
             
             npm run build --workspace=apps/storefront-next
           '';
@@ -300,7 +300,7 @@
 
           buildPhase = ''
             export PYTHON=${pkgs.python3}/bin/python3
-            export MEDUSA_BACKEND_URL="https://admin.ownorgasm.com"
+            export MEDUSA_BACKEND_URL="https://admin.orgasmtoy.com"
             
             # Build admin only
             cd apps/medusa

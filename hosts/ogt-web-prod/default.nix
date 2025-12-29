@@ -74,7 +74,7 @@
     };
     
     # Caddy email
-    caddy.email = "support@ownorgasm.com";
+    caddy.email = "support@orgasmtoy.com";
     
     # Application services
     medusa = {
@@ -86,7 +86,7 @@
     storefront = {
       enable = true;
       port = 3000;
-      backendUrl = "https://admin.ownorgasm.com";
+      backendUrl = "https://admin.orgasmtoy.com";
     };
     
     marketing-service = {

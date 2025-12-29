@@ -42,10 +42,10 @@ in
         PORT = toString cfg.port;
         DATABASE_URL = cfg.databaseUrl;
         REDIS_URL = cfg.redisUrl;
-        STORE_CORS = "https://ownorgasm.com,https://www.ownorgasm.com";
-        ADMIN_CORS = "https://admin.ownorgasm.com";
-        AUTH_CORS = "https://ownorgasm.com,https://admin.ownorgasm.com";
-        MEDUSA_BACKEND_URL = "https://admin.ownorgasm.com";
+        STORE_CORS = "https://orgasmtoy.com,https://www.orgasmtoy.com";
+        ADMIN_CORS = "https://admin.orgasmtoy.com";
+        AUTH_CORS = "https://orgasmtoy.com,https://admin.orgasmtoy.com";
+        MEDUSA_BACKEND_URL = "https://admin.orgasmtoy.com";
         MEDUSA_DISABLE_ADMIN = "true";
         HOME = "/var/lib/medusa";
         npm_config_cache = "/var/lib/medusa/.npm";

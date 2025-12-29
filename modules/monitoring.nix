@@ -30,9 +30,9 @@ with lib;
           params = { module = [ "http_2xx" ]; };
           static_configs = [{
             targets = [
-              "https://ownorgasm.com"
-              "https://www.ownorgasm.com"
-              "https://admin.ownorgasm.com"
+              "https://orgasmtoy.com"
+              "https://www.orgasmtoy.com"
+              "https://admin.orgasmtoy.com"
             ];
           }];
           relabel_configs = [
@@ -84,7 +84,7 @@ with lib;
           dns_google:
             prober: dns
             dns:
-              query_name: "ownorgasm.com"
+              query_name: "orgasmtoy.com"
               query_type: "A"
       '';
     };
