@@ -26,6 +26,9 @@ module.exports = defineConfig({
     disable: process.env.MEDUSA_DISABLE_ADMIN === "true",
   },
   modules: [
+    {
+      resolve: "./src/modules/blog",
+    },
     // Modules commented out in TS version, preserving comments
   ],
 });
