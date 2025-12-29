@@ -69,6 +69,13 @@ with lib;
               }
             '';
           };
+
+          "admin.ownorgasm.com" = {
+            extraConfig = ''
+              redir https://admin.orgasmtoy.com{uri} permanent
+            '';
+          };
+      };
       };
     };
   };
