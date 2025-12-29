@@ -307,9 +307,12 @@
             pkgs.gnumake
           ];
 
+          # Fix Sharp build: Force use of system libvips
+          SHARP_IGNORE_GLOBAL_LIBVIPS = "false";
+          npm_config_build_from_source = "true";
+
           buildPhase = ''
             export PYTHON=${pkgs.python3}/bin/python3
-            export SHARP_IGNORE_GLOBAL_LIBVIPS=false
             export MEDUSA_BACKEND_URL="https://admin.ownorgasm.com"
             
             # Build admin only
