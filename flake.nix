@@ -311,9 +311,8 @@
             export PYTHON=${pkgs.python3}/bin/python3
             export MEDUSA_BACKEND_URL="https://admin.ownorgasm.com"
             
-            # Build admin only
-            cd apps/medusa
-            npx medusa build --admin-only
+            # Build admin only (from root to preserve context)
+            npm run build --workspace=apps/medusa -- --admin-only
           '';
 
           installPhase = ''
