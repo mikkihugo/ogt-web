@@ -296,10 +296,20 @@
           nativeBuildInputs = [ 
             pkgs.pkg-config 
             pkgs.python3
+            pkgs.util-linux
+            pkgs.nodePackages.node-gyp
+          ];
+
+          buildInputs = [
+            pkgs.vips
+            pkgs.glib
+            pkgs.gcc
+            pkgs.gnumake
           ];
 
           buildPhase = ''
             export PYTHON=${pkgs.python3}/bin/python3
+            export SHARP_IGNORE_GLOBAL_LIBVIPS=false
             export MEDUSA_BACKEND_URL="https://admin.ownorgasm.com"
             
             # Build admin only
