@@ -46,7 +46,7 @@ in
         ADMIN_CORS = "https://admin.orgasmtoy.com";
         AUTH_CORS = "https://orgasmtoy.com,https://admin.orgasmtoy.com";
         MEDUSA_BACKEND_URL = "https://admin.orgasmtoy.com";
-        MEDUSA_DISABLE_ADMIN = "true";
+        MEDUSA_DISABLE_ADMIN = "false";
         HOME = "/var/lib/medusa";
         npm_config_cache = "/var/lib/medusa/.npm";
       };
