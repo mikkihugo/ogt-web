@@ -29,9 +29,7 @@ http://*.localhost {
   reverse_proxy storefront-next:3000
 }
 
-cms.{$BASE_DOMAIN} {
-  reverse_proxy strapi:1337
-}
+
 
 support.{$BASE_DOMAIN} {
   reverse_proxy chatwoot-web:3000

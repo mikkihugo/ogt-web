@@ -46,12 +46,7 @@ with lib;
           '';
         };
         
-        # Strapi CMS
-        "cms.ownorgasm.com" = {
-          extraConfig = ''
-            reverse_proxy localhost:1337
-          '';
-        };
+
       };
     };
   };
