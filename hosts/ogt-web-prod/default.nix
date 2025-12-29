@@ -14,6 +14,7 @@
     ../../modules/storefront.nix
     ../../modules/marketing-service.nix
     ../../modules/strapi.nix
+    ../../modules/monitoring.nix
     # External modules
     inputs.sops-nix.nixosModules.sops
   ];
@@ -55,6 +56,7 @@
     database.enable = true;
     storage.enable = true;
     caddy.enable = true;
+    monitoring.enable = true;
   };
 
   # ==========================================================================
