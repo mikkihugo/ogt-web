@@ -307,9 +307,19 @@
             pkgs.gnumake
           ];
 
-          # Fix Sharp build: Force use of system libvips
-          SHARP_IGNORE_GLOBAL_LIBVIPS = "false";
-          npm_config_build_from_source = "true";
+          env = {
+            SHARP_IGNORE_GLOBAL_LIBVIPS = "false";
+            npm_config_build_from_source = "true";
+            npm_config_sharp_ignore_global_libvips = "false";
+          };
+
+          preConfigure = ''
+            echo "=== DEBUG: Environment Variables ==="
+            env | grep SHARP || true
+            env | grep npm || true
+            echo "=== DEBUG: Pkg-Config ==="
+            ${pkgs.pkg-config}/bin/pkg-config --libs vips || echo "pkg-config failed to find vips"
+          '';
 
           buildPhase = ''
             export PYTHON=${pkgs.python3}/bin/python3
