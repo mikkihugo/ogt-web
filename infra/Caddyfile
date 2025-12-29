@@ -30,6 +30,4 @@ support.{$BASE_DOMAIN} {
   reverse_proxy chatwoot-web:3000
 }
 
-marketing.{$BASE_DOMAIN} {
-  reverse_proxy marketing-service:8080
-}
+
