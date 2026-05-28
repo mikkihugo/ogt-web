@@ -27,7 +27,7 @@
   description = "OGT-Web: Magento 2 E-commerce on Fly.io with Nix + FlakeCache";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
     nix2container.url = "github:nlewo/nix2container";
     nix2container.inputs.nixpkgs.follows = "nixpkgs";
@@ -37,11 +37,13 @@
   # This enables pulling pre-built derivations from cache
   nixConfig = {
     extra-substituters = [
+      "https://cache.centralcloud.com/default"
       "https://cache.nixos.org"
       # FlakeCache substituter (when available):
       # "https://c.flakecache.com"
     ];
     extra-trusted-public-keys = [
+      "default:ywfU21WX06iOn2Ec2lae1jYh4w8LO4IQkmp06vJzsk8="
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       # FlakeCache public key:
       # "c.flakecache.com-1:WbJFKuGbfVpBRT8FyqLrJ+EvGL6YdUrqgyj+X/FVy0I="
@@ -240,7 +242,7 @@
             tag = "${builtins.substring 0 8 (self.rev or "dev")}-amd64";
             # Flatten to a single layer to avoid cross-layer symlink issues with /bin/start.sh
             maxLayers = 1;
-            copyToRoot = [ rootEnv magentoCore startScript ];
+            copyToRoot = [ rootEnv magentoCore ];
             config = {
               # Default command: use the merged /bin path in the image root to avoid
               # referencing a GC'd Nix store path at runtime.
@@ -275,7 +277,7 @@
           buildInputs = with pkgs; [
             php
             php.packages.composer
-            mariadb-client
+            mariadb.client
             traefik
             redis
             git
@@ -288,6 +290,8 @@
             podman
             skopeo
             shadow  # provides newuidmap/newgidmap for rootless containers
+            attic-client
+            startScript
           ];
 
           shellHook = ''
