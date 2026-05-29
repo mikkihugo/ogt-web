@@ -62,7 +62,7 @@
         # =====================================================================
         # PHP with Magento-required extensions
         # =====================================================================
-        php = pkgs.php83.buildEnv {
+        php = pkgs.php.buildEnv {
           extensions = { enabled, all }: enabled ++ (with all; [
             bcmath
             gd
