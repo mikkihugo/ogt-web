@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attic
+  namespace: attic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: attic
+  template:
+    metadata:
+      labels:
+        app: attic
+    spec:
+      initContainers:
+      - name: init-data
+        image: busybox:latest
+        command: ["sh", "-c", "mkdir -p /data/storage"]
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: attic
+        image: ghcr.io/zhaofengli/attic:latest
+        args: ["-f", "/config/atticd.toml"]
+        ports:
+        - containerPort: 8000
+          name: http
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /config
+      - name: tailscale
+        image: tailscale/tailscale:stable
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          set -e
+          mkdir -p /var/run/tailscale
+          tailscaled --state=${TS_STATE_DIR}/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
+          sleep 5
+          tailscale up --login-server=http://10.43.66.135:8080 --authkey=${TS_AUTHKEY} --hostname=${TS_HOSTNAME} --accept-dns=false
+          # Keep running - attic is exposed via Cloudflare, tailscale is for internal mesh
+          sleep infinity
+        env:
+        - name: TS_AUTHKEY
+          valueFrom:
+            secretKeyRef:
+              name: tailscale-auth
+              key: TS_AUTHKEY
+        - name: TS_HOSTNAME
+          value: attic-remote
+        - name: TS_STATE_DIR
+          value: /var/lib/tailscale
+        - name: TS_ACCEPT_DNS
+          value: "false"
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: ts-state
+          mountPath: /var/lib/tailscale
+        - name: dev-tun
+          mountPath: /dev/net/tun
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: attic-data
+      - name: ts-state
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: atticd-config
+      - name: dev-tun
+        hostPath:
+          path: /dev/net/tun
+          type: CharDevice
