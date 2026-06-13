@@ -1,0 +1,14 @@
+# SF preferences — see ~/.sf/agent/extensions/sf/docs/preferences-reference.md for docs
+version: 1
+last_synced_with_sf: 2.80.0
+sf_template_state: pending
+verification_commands:
+  - npm run build
+always_use_skills: []
+prefer_skills: []
+avoid_skills: []
+skill_rules: []
+custom_instructions: []
+models: {}
+skill_discovery: {}
+auto_supervisor: {}
