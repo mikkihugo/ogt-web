@@ -1,0 +1,129 @@
+name: Deploy to Hetzner
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hetzner
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy ogt-web to Hetzner
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      id-token: write      # For attestations
+      attestations: write  # For GitHub attestations
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: flakecache/nix-installer@v1.0.6
+
+      - name: Build container image
+        shell: bash
+        env:
+          COMPOSER_MAGENTO_USERNAME: ${{ secrets.COMPOSER_MAGENTO_USERNAME }}
+          COMPOSER_MAGENTO_PASSWORD: ${{ secrets.COMPOSER_MAGENTO_PASSWORD }}
+        run: |
+          echo "Building container image with Nix..."
+          nix build .#container --print-build-logs
+          
+          # Load the image into Docker
+          echo "Loading image into Docker..."
+          docker load < result
+          
+          # Tag for Hetzner deployment
+          TAG="$(echo $GITHUB_SHA | cut -c1-8)"
+          docker tag ogt-web:latest ogt-web:$TAG
+          docker tag ogt-web:latest ogt-web:latest
+
+      - name: Push to container registry (optional)
+        if: ${{ secrets.CONTAINER_REGISTRY_URL != '' }}
+        shell: bash
+        run: |
+          TAG="$(echo $GITHUB_SHA | cut -c1-8)"
+          echo "Pushing to registry: ${{ secrets.CONTAINER_REGISTRY_URL }}"
+          
+          # Login to registry if credentials provided
+          if [ -n "${{ secrets.CONTAINER_REGISTRY_USERNAME }}" ] && [ -n "${{ secrets.CONTAINER_REGISTRY_PASSWORD }}" ]; then
+            echo "${{ secrets.CONTAINER_REGISTRY_PASSWORD }}" | docker login ${{ secrets.CONTAINER_REGISTRY_URL }} -u "${{ secrets.CONTAINER_REGISTRY_USERNAME }}" --password-stdin
+          fi
+          
+          docker tag ogt-web:$TAG ${{ secrets.CONTAINER_REGISTRY_URL }}/ogt-web:$TAG
+          docker tag ogt-web:latest ${{ secrets.CONTAINER_REGISTRY_URL }}/ogt-web:latest
+          docker push ${{ secrets.CONTAINER_REGISTRY_URL }}/ogt-web:$TAG
+          docker push ${{ secrets.CONTAINER_REGISTRY_URL }}/ogt-web:latest
+
+      - name: Deploy to Hetzner server
+        shell: bash
+        env:
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
+          HETZNER_USER: ${{ secrets.HETZNER_USER }}
+          HETZNER_SSH_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+        run: |
+          TAG="$(echo $GITHUB_SHA | cut -c1-8)"
+          
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "$HETZNER_SSH_KEY" > ~/.ssh/hetzner_key
+          chmod 600 ~/.ssh/hetzner_key
+          ssh-keyscan -H $HETZNER_HOST >> ~/.ssh/known_hosts
+          
+          # Save image as tar for transfer
+          echo "Saving Docker image..."
+          docker save ogt-web:$TAG ogt-web:latest | gzip > /tmp/ogt-web-images.tar.gz
+          
+          # Transfer image to Hetzner server
+          echo "Transferring image to Hetzner server..."
+          scp -i ~/.ssh/hetzner_key /tmp/ogt-web-images.tar.gz $HETZNER_USER@$HETZNER_HOST:/tmp/
+          
+          # Deploy on Hetzner server
+          echo "Deploying on Hetzner server..."
+          ssh -i ~/.ssh/hetzner_key $HETZNER_USER@$HETZNER_HOST << 'ENDSSH'
+            set -e
+            
+            # Load images
+            echo "Loading Docker images..."
+            docker load < /tmp/ogt-web-images.tar.gz
+            rm /tmp/ogt-web-images.tar.gz
+            
+            # Stop and remove old container
+            echo "Stopping old container..."
+            docker stop ogt-web || true
+            docker rm ogt-web || true
+            
+            # Create data volume if it doesn't exist
+            docker volume create magento_data || true
+            
+            # Run new container
+            echo "Starting new container..."
+            docker run -d \
+              --name ogt-web \
+              --restart unless-stopped \
+              -p 8080:8080 \
+              -v magento_data:/var/lib/mysql \
+              -e SITE_ENV=production \
+              -e ENABLE_GALERA=false \
+              -e SITE_NAME=orgasmtoy.com \
+              -e COMPOSER_MAGENTO_USERNAME="${{ secrets.COMPOSER_MAGENTO_USERNAME }}" \
+              -e COMPOSER_MAGENTO_PASSWORD="${{ secrets.COMPOSER_MAGENTO_PASSWORD }}" \
+              ogt-web:latest
+            
+            # Clean up old images
+            echo "Cleaning up old images..."
+            docker image prune -f
+            
+            # Health check
+            echo "Waiting for container to be healthy..."
+            sleep 10
+            docker ps | grep ogt-web
+            docker logs --tail 50 ogt-web
+          ENDSSH
+          
+          # Cleanup
+          rm -f /tmp/ogt-web-images.tar.gz
+          rm -f ~/.ssh/hetzner_key
