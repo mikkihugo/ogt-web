@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-13T14:17:32.742Z",
+  "sourcePath": "/home/mhugo/code/ogt-web/admin/.sf/runtime/uok-parity.jsonl",
+  "totalEvents": 0,
+  "paths": {},
+  "statuses": {},
+  "criticalMismatches": [],
+  "historicalCriticalMismatches": [],
+  "currentErrorEvents": 0,
+  "historicalErrorEvents": 0,
+  "enterEvents": 0,
+  "exitEvents": 0,
+  "missingExitEvents": 0,
+  "legacyMissingExitEvents": 0,
+  "ledgerRunCount": 500,
+  "unmatchedRuns": [],
+  "freshUnmatchedRuns": [],
+  "historicalUnmatchedRuns": [],
+  "totalDiffs": 0,
+  "divergencesByPlane": {
+    "plan": 0,
+    "graph": 0,
+    "model-policy": 0,
+    "audit-envelope": 0,
+    "gitops": 0
+  },
+  "liveAutoLock": false
+}

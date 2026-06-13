@@ -1,0 +1,6 @@
+# HELP sf_metrics_flush_success_total Total successful metrics flushes
+# TYPE sf_metrics_flush_success_total counter
+sf_metrics_flush_success_total 4
+# HELP sf_metrics_flush_duration_ms Duration of last metrics flush in milliseconds
+# TYPE sf_metrics_flush_duration_ms gauge
+sf_metrics_flush_duration_ms 179

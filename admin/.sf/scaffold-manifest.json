@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "profile": "app",
+  "applied": [
+    {
+      "path": "AGENTS.md",
+      "template": "AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:dc04211ddd84103bb94b805effcf00f436ea678c1e88301969647ded2e2a787a"
+    },
+    {
+      "path": "src/AGENTS.md",
+      "template": "src/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:ac5f874be887aed0bd29105a7c3b7e9269b4b3c0cc7b5b1506da0994c466cf01"
+    },
+    {
+      "path": "tests/AGENTS.md",
+      "template": "tests/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:dab2b9a31c2c48e07e4913cd8744be8553f279ea516ebc138730301ae401a683"
+    },
+    {
+      "path": "ARCHITECTURE.md",
+      "template": "ARCHITECTURE.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:b93561af871cbfd6c7445b66273600a5654359dd3db578b424a0c3fa587ee5f3"
+    },
+    {
+      "path": "docs/design-docs/index.md",
+      "template": "docs/design-docs/index.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:5210038cd1826032fe47f225a27944ee23871bc5173b61aa7bba45c03eb44361"
+    },
+    {
+      "path": "docs/AGENTS.md",
+      "template": "docs/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:b35804ce78ca309cab8769719f6e0738141f1121682fbd46490419abd2c6f870"
+    },
+    {
+      "path": "docs/records/AGENTS.md",
+      "template": "docs/records/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:dc21117dfa7607d7ce4cc6ce5724658348a95e9807673ff526b9cf02e2568de0"
+    },
+    {
+      "path": "docs/records/index.md",
+      "template": "docs/records/index.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:03e974ded1b733db1a84dbf92096ff91bdc28a2ae37f457c536bc184fdc79cb9"
+    },
+    {
+      "path": "docs/RECORDS_KEEPER.md",
+      "template": "docs/RECORDS_KEEPER.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:3872de9cd72bd9129814a5e77e3b86abe76bef33f3ca34e04ae7582b4cfd066a"
+    },
+    {
+      "path": "docs/design-docs/AGENTS.md",
+      "template": "docs/design-docs/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:707d43067edcfd33dc0a11db32d383f89739e187f95da4bda6b94575a9e3d272"
+    },
+    {
+      "path": "docs/design-docs/core-beliefs.md",
+      "template": "docs/design-docs/core-beliefs.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:6c010e06f31d2bf30b964949a3f9fb3fa0fc0d28fbc8f9d5a0bd4371b215b5e5"
+    },
+    {
+      "path": "docs/exec-plans/active/index.md",
+      "template": "docs/exec-plans/active/index.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:b6d7308c6aae91e95a6f67ab9136a188aef34f97ea2736e3af8df67e0b593f00"
+    },
+    {
+      "path": "docs/exec-plans/AGENTS.md",
+      "template": "docs/exec-plans/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:7bd9f815617cb42b1f2c85e6d557986a2f1e7fbc081fcc4e71f3d14cecefc5f0"
+    },
+    {
+      "path": "docs/exec-plans/completed/index.md",
+      "template": "docs/exec-plans/completed/index.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:4738dc5217313da2a91f5585a5f7b19463068271c4170bf13fd7f7b603fae9fa"
+    },
+    {
+      "path": "docs/exec-plans/tech-debt-tracker.md",
+      "template": "docs/exec-plans/tech-debt-tracker.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:6a3b7c9c544eca537c325c27fcf84aff8c2a35f4310ba2b814f156e845ce94ea"
+    },
+    {
+      "path": "docs/generated/db-schema.md",
+      "template": "docs/generated/db-schema.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:8488a607c1a2981654a3b030600d2e10627d132ebd0c75700648a08dede93368"
+    },
+    {
+      "path": "docs/product-specs/index.md",
+      "template": "docs/product-specs/index.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:ca3477e8d74fe277a2e0b2cdb3f03c235e294015a6ece2f571a82acc7475d31c"
+    },
+    {
+      "path": "docs/product-specs/AGENTS.md",
+      "template": "docs/product-specs/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:cc7b5687e8b1ea78848ee318ca5a25346e5a6ee0dc33b54506d8f56bc16f13c4"
+    },
+    {
+      "path": "docs/product-specs/new-user-onboarding.md",
+      "template": "docs/product-specs/new-user-onboarding.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:d612bf07c7ebe888378196757aac6d0d6e8a0edcefdb2025c6f53a33140df51c"
+    },
+    {
+      "path": "docs/references/design-system-reference-llms.txt",
+      "template": "docs/references/design-system-reference-llms.txt",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:5a5a35a3f80c8b4433ad30c1f155b1e8c7fd245ce2a3def9627daa9f40854eb3"
+    },
+    {
+      "path": "docs/references/nixpacks-llms.txt",
+      "template": "docs/references/nixpacks-llms.txt",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:22f9a8549e3ced71d0b0a912c6dcdfb2ec83a573168ee1b44ca266f1eb0307bf"
+    },
+    {
+      "path": "docs/references/uv-llms.txt",
+      "template": "docs/references/uv-llms.txt",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:e8a998667c0f830a15b68e207f6b69e6377dd7e82728833f842678f72864e9b6"
+    },
+    {
+      "path": "docs/DESIGN.md",
+      "template": "docs/DESIGN.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:8f7adb38129f4e26524208496a6a2688a40a0f232412cd4c2788282a79ac91bb"
+    },
+    {
+      "path": "docs/FRONTEND.md",
+      "template": "docs/FRONTEND.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:03087953d690c9902d35297720d1482262c1610e3050084f891db3be711571ef"
+    },
+    {
+      "path": "docs/PLANS.md",
+      "template": "docs/PLANS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:74415bc9c64f019b889b81e0effa4ee3df14ec98f7f303b862c1c6e89755a2d3"
+    },
+    {
+      "path": "docs/PRODUCT_SENSE.md",
+      "template": "docs/PRODUCT_SENSE.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:a0dff1510f72089f8bdfd66d7623937bfd44336084935a95d46c053f89d8a182"
+    },
+    {
+      "path": "docs/QUALITY_SCORE.md",
+      "template": "docs/QUALITY_SCORE.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:0ec6e6280228d9ef0f982aa108fb6f6bc93c487deaa03d81d82c911e1e760281"
+    },
+    {
+      "path": "docs/RELIABILITY.md",
+      "template": "docs/RELIABILITY.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:cda2b3d8f7f6323c5185e32fe832d8c181e6383c1a515b20c3e530eb6f133407"
+    },
+    {
+      "path": "docs/SECURITY.md",
+      "template": "docs/SECURITY.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:baf816ba2591d9e3859b82ba1dbe8b05f7bb8003edab90071c086eee3edfd445"
+    },
+    {
+      "path": "docs/design-docs/ADR-TEMPLATE.md",
+      "template": "docs/design-docs/ADR-TEMPLATE.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:ad1cdae31468ccd1c1c2b45aadd2078598e2c1f7e5ac6a12f6782456aa128a26"
+    },
+    {
+      "path": ".sf/harness/AGENTS.md",
+      "template": ".sf/harness/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:685c41e601340086b8076263a71315c66554efdaeb074bc1b907eebf879174c6"
+    },
+    {
+      "path": ".sf/harness/specs/AGENTS.md",
+      "template": ".sf/harness/specs/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:0f4fbf4111704d05744e4a4e13a9bf3eada262f0da9517c2010f0b46f4bd3c45"
+    },
+    {
+      "path": ".sf/harness/specs/bootstrap.md",
+      "template": ".sf/harness/specs/bootstrap.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:b86ba7cf2cec39a7a9f9d94f885998cfe26eebfc5b76fdd8375ef125e927e0cf"
+    },
+    {
+      "path": ".sf/harness/evals/AGENTS.md",
+      "template": ".sf/harness/evals/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:6f88bf8a2bad95d8db5985c9b3317b9edd65592c12e98bb0bff1a24ec152d768"
+    },
+    {
+      "path": ".sf/harness/graders/AGENTS.md",
+      "template": ".sf/harness/graders/AGENTS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:2db17feae1acfe62d85aafbe32d016873c3036d4d76e9dd0db478375fae0794e"
+    },
+    {
+      "path": ".sf/PRINCIPLES.md",
+      "template": ".sf/PRINCIPLES.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:9d5c50cb3d602f66468a33a4324068fab8a022fab0fd6940c371a5986af2947e"
+    },
+    {
+      "path": ".sf/STYLE.md",
+      "template": ".sf/STYLE.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:a78cb9cb5a95271ff43d91acf246f1390216a30aca48f3796a6aa135301f167f"
+    },
+    {
+      "path": ".sf/NON-GOALS.md",
+      "template": ".sf/NON-GOALS.md",
+      "version": "2.80.0",
+      "appliedAt": "2026-06-13T12:16:18.997Z",
+      "stateAtApply": "pending",
+      "contentHash": "sha256:906860a75a8ae97d473efa0530675aded011c4897d858a8eff44ce42ea73a74a"
+    }
+  ]
+}
