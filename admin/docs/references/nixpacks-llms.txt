@@ -1,0 +1,2 @@
+<!-- sf-doc: version=2.80.0 template=docs/references/nixpacks-llms.txt state=pending hash=sha256:22f9a8549e3ced71d0b0a912c6dcdfb2ec83a573168ee1b44ca266f1eb0307bf -->
+Reference slot for Nixpacks deployment/build guidance intended for LLM consumption.

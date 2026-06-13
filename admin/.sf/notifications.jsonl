@@ -1,0 +1,1 @@
+{"schemaVersion":2,"id":"650dcf28-b0ee-48d4-a96d-4d69c2a04a95","ts":"2026-06-13T12:19:08.009Z","severity":"warning","message":"Startup doctor found 62 blocking issue(s). Run /doctor audit for details.","source":"notify","read":false,"repeatCount":1,"noticeKind":"system_notice","metadata":{"noticeKind":"system_notice"}}
