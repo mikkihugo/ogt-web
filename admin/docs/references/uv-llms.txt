@@ -1,0 +1,2 @@
+<!-- sf-doc: version=2.80.0 template=docs/references/uv-llms.txt state=pending hash=sha256:e8a998667c0f830a15b68e207f6b69e6377dd7e82728833f842678f72864e9b6 -->
+Reference slot for uv/Python tooling guidance intended for LLM consumption.
