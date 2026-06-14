@@ -1,0 +1,2 @@
+<!-- sf-doc: version=2.80.0 template=docs/references/design-system-reference-llms.txt state=pending hash=sha256:5a5a35a3f80c8b4433ad30c1f155b1e8c7fd245ce2a3def9627daa9f40854eb3 -->
+Reference slot for design-system guidance intended for LLM consumption.
